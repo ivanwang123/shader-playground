@@ -48,13 +48,13 @@ export function createRenderer(
 }
 
 export function createComposer(
-  renderer: THREE.WebGLRenderer,
+  canvas: HTMLCanvasElement,
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,
   options?: Options
 ) {
   // Renderer
-  // const renderer = createBaseRenderer(canvas, camera);
+  const renderer = createBaseRenderer(canvas, camera);
 
   // Composer
   const composer = new EffectComposer(renderer);
