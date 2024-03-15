@@ -32,6 +32,8 @@ export async function addMonkey(scene: THREE.Scene) {
 
   scene.add(monkey.scene);
   numModels++;
+
+  return monkey;
 }
 
 export function addCube(scene: THREE.Scene, color?: THREE.ColorRepresentation) {
@@ -46,6 +48,8 @@ export function addCube(scene: THREE.Scene, color?: THREE.ColorRepresentation) {
 
   scene.add(cube);
   numModels++;
+
+  return cube;
 }
 
 export function addSphere(
@@ -63,6 +67,8 @@ export function addSphere(
 
   scene.add(sphere);
   numModels++;
+
+  return sphere;
 }
 
 function calcModelPosition() {

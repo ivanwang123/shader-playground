@@ -2,10 +2,14 @@
   import { onMount } from "svelte";
   import * as THREE from "three";
 
-  import { createComposerScene } from "$lib/scenes/baseScene";
   import PixelPass from "./PixelPass";
+  import { createScene } from "$lib/scenes/createScene";
+  import { createComposer } from "$lib/scenes/createRenderer";
+  import { addGround, addMonkey } from "$lib/scenes/addModels";
 
   let canvas: HTMLCanvasElement;
+
+  const { scene, camera, gui } = createScene();
 
   const intensity = {
     value: 3,
@@ -17,8 +21,10 @@
   );
 
   onMount(() => {
-    const { scene, camera, composer, gui, resize } =
-      createComposerScene(canvas);
+    const { composer, resize } = createComposer(canvas, scene, camera);
+
+    addGround(scene);
+    addMonkey(scene);
 
     const pixelPass = new PixelPass(resolution, scene, camera);
     composer.addPass(pixelPass);

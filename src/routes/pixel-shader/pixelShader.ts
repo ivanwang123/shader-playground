@@ -2,7 +2,6 @@ import { EffectComposer, ShaderPass } from "three/examples/jsm/Addons.js";
 import * as THREE from "three";
 import type GUI from "lil-gui";
 
-import { createComposerScene } from "$lib/scenes/baseScene";
 import pixelVert from "./pixel.vert";
 import pixelFrag from "./pixel.frag";
 import { createComposer } from "$lib/scenes/createRenderer";

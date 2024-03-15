@@ -3,11 +3,15 @@
   import { ShaderPass } from "three/examples/jsm/Addons.js";
   import * as THREE from "three";
 
-  import { createComposerScene } from "$lib/scenes/baseScene";
   import pixelVert from "./pixel.vert";
   import pixelFrag from "./pixel.frag";
+  import { createScene } from "$lib/scenes/createScene";
+  import { createComposer } from "$lib/scenes/createRenderer";
+  import { addGround, addMonkey } from "$lib/scenes/addModels";
 
   let canvas: HTMLCanvasElement;
+
+  const { scene, camera, gui } = createScene();
 
   onMount(() => {
     const pixelEffectUniforms = {
@@ -28,15 +32,16 @@
     });
     pixelEffect.renderToScreen = true;
 
-    const { scene, camera, renderer, composer, gui, resize } =
-      createComposerScene(canvas, {
-        resizeFunc: (renderer) => {
-          pixelEffect.uniforms["uResolution"].value.x =
-            renderer.domElement.width;
-          pixelEffect.uniforms["uResolution"].value.y =
-            renderer.domElement.height;
-        },
-      });
+    const { composer, resize } = createComposer(canvas, scene, camera, {
+      resizeFunc: (renderer) => {
+        pixelEffect.uniforms["uResolution"].value.x = renderer.domElement.width;
+        pixelEffect.uniforms["uResolution"].value.y =
+          renderer.domElement.height;
+      },
+    });
+
+    addGround(scene);
+    addMonkey(scene);
 
     const shaderFolder = gui.addFolder("Shader");
     shaderFolder
