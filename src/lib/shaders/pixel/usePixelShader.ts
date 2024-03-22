@@ -6,7 +6,7 @@ import pixelVert from "./pixel.vert";
 import pixelFrag from "./pixel.frag";
 import { createComposer } from "$lib/scenes/createRenderer";
 
-export function pixelShader(
+export function usePixelShader(
   canvas: HTMLCanvasElement,
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,

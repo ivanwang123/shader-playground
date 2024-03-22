@@ -17,8 +17,8 @@
     addMonkey,
     addSphere,
   } from "$lib/scenes/addModels";
-  import { pixelShader } from "../pixel-shader/pixelShader";
-  import { useToonMaterial } from "../toon-shader/createToonMaterial";
+  import { usePixelShader } from "$lib/shaders/pixel/usePixelShader";
+  import { useToonMaterial } from "$lib/materials/toon/createToonMaterial";
 
   const shaders = [
     { id: "default-shader", value: "default", label: "Default" },
@@ -94,7 +94,7 @@
   $: {
     switch (selectedShader) {
       case "pixel":
-        pixelShader(canvas, scene, camera, gui);
+        usePixelShader(canvas, scene, camera, gui);
         break;
       default:
         createRenderer(canvas, scene, camera);
@@ -128,7 +128,7 @@
   }
 
   onMount(() => {
-    const { resize } = pixelShader(canvas, scene, camera, gui);
+    const { resize } = usePixelShader(canvas, scene, camera, gui);
 
     addGround(scene);
 

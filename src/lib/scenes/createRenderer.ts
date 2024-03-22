@@ -59,7 +59,7 @@ export function createComposer(
   // Composer
   const composer = new EffectComposer(renderer);
   composer.setSize(window.innerWidth, window.innerHeight);
-  composer.addPass(new RenderPass(scene, camera));
+  // composer.addPass(new RenderPass(scene, camera));
 
   // Animate
   const animate = () => {
@@ -91,7 +91,7 @@ export function createComposer(
   };
 }
 
-function createBaseRenderer(
+export function createBaseRenderer(
   canvas: HTMLCanvasElement,
   camera: THREE.PerspectiveCamera
 ) {

@@ -1,3 +1,4 @@
+import { createToonMaterial } from "$lib/materials/toon/createToonMaterial";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
 
@@ -17,6 +18,7 @@ export async function addMonkey(scene: THREE.Scene) {
     "/textures/MonkeyTexture.png"
   );
   monkeyTexture.flipY = false;
+  const monkeyMaterial = createToonMaterial(monkeyTexture);
 
   let monkey = await new GLTFLoader().loadAsync("/models/Monkey.glb");
   monkey.scene.position.set(1, 1, 0);
@@ -26,6 +28,10 @@ export async function addMonkey(scene: THREE.Scene) {
       child.material = new THREE.MeshStandardMaterial({
         color: child.material.color,
       });
+      // texture = texture.convertLinearToSRGB();
+      // child.material = monkeyMaterial
+      // child.material = createToonMaterial(child.material.color);
+
       child.castShadow = true;
     }
   });

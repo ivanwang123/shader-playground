@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import * as THREE from "three";
 
-  import { createToonMaterial } from "./createToonMaterial";
+  import { createToonMaterial } from "$lib/materials/toon/createToonMaterial";
   import { createRenderer } from "$lib/scenes/createRenderer";
   import {
     addCube,
@@ -11,10 +11,11 @@
     addSphere,
   } from "$lib/scenes/addModels";
   import { createScene } from "$lib/scenes/createScene";
+  import { CustomRenderer } from "$lib/scenes/CustomRenderer";
 
   let canvas: HTMLCanvasElement;
 
-  const { scene, camera, gui } = createScene();
+  const { scene, camera } = createScene();
 
   const monkeyTexture = new THREE.TextureLoader().load(
     "/textures/MonkeyTexture.png"
@@ -45,12 +46,14 @@
 
     addGround(scene);
 
-    const { resize } = createRenderer(canvas, scene, camera);
+    // const { resize } = createRenderer(canvas, scene, camera);
+    const customRenderer = new CustomRenderer(canvas, scene, camera);
+    customRenderer.animate();
 
-    window.addEventListener("resize", resize);
+    customRenderer.addResizeListener();
 
     return () => {
-      window.removeEventListener("resize", resize);
+      customRenderer.removeResizeListener();
     };
   });
 </script>

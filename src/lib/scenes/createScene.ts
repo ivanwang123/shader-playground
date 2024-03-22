@@ -32,8 +32,8 @@ export function createScene(options?: Options) {
     0.1,
     1000
   );
-  camera.position.z = 8;
-  camera.position.y = 8;
+  camera.position.z = 4;
+  camera.position.y = 4;
 
   // Lighting
   const ambientLight = new THREE.AmbientLight(
