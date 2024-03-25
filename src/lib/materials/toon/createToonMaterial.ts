@@ -15,7 +15,9 @@ export function createToonMaterial(texture: THREE.Texture | THREE.Color) {
   let uniforms: { [uniform: string]: THREE.IUniform<any> } = {
     ...THREE.UniformsLib.lights,
     uGlossiness: { value: 5 },
+    uArray: { value: [] },
   };
+  console.log(uniforms);
 
   if (isTexture) {
     fragmentShader = toonTextureFrag;
