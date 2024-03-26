@@ -5,7 +5,8 @@ import { GLTFLoader } from "three/examples/jsm/Addons.js";
 export function addGround(scene: THREE.Scene) {
   const groundGeometry = new THREE.PlaneGeometry(10, 10);
   // const groundMaterial = new THREE.MeshStandardMaterial({ color: 0xceb1be });
-  const groundMaterial = createToonMaterial(new THREE.Color(0xceb1be));
+  // const groundMaterial = createToonMaterial(new THREE.Color(0xceb1be));
+  const groundMaterial = createToonMaterial(new THREE.Color(0xaaaaaa));
   const ground = new THREE.Mesh<any, any, any>(groundGeometry, groundMaterial);
   ground.receiveShadow = true;
   ground.rotateX(THREE.MathUtils.degToRad(-90));
@@ -51,8 +52,8 @@ export function addCube(scene: THREE.Scene, color?: THREE.ColorRepresentation) {
   //   color: color || 0xff773d,
   // });
   const cubeMaterial = createToonMaterial(new THREE.Color(0xff773d));
-  // cubeMaterial.colorWrite = false;
-  // cubeMaterial.depthWrite = false;
+  cubeMaterial.colorWrite = false;
+  cubeMaterial.depthWrite = false;
   const cube = new THREE.Mesh<any, any, any>(cubeGeometry, cubeMaterial);
   cube.position.x = calcModelPosition();
   cube.position.y = 0.5;
@@ -73,8 +74,8 @@ export function addSphere(
   //   color: color || 0x777da7,
   // });
   const sphereMaterial = createToonMaterial(new THREE.Color(color || 0x777da7));
-  // sphereMaterial.colorWrite = false;
-  // sphereMaterial.depthWrite = false;
+  sphereMaterial.colorWrite = false;
+  sphereMaterial.depthWrite = false;
   const sphere = new THREE.Mesh<any, any, any>(sphereGeometry, sphereMaterial);
   sphere.position.x = calcModelPosition();
   sphere.position.y = 0.5;

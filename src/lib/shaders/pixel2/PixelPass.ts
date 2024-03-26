@@ -11,9 +11,11 @@ export default class PixelPass extends Pass {
   resolution: THREE.Vector2;
   scene: THREE.Scene;
   camera: THREE.Camera;
+  topdownCamera: THREE.Camera;
   fsQuad: FullScreenQuad;
   rgbRenderTarget: THREE.WebGLRenderTarget;
   normalRenderTarget: THREE.WebGLRenderTarget;
+  groundRenderTarget: THREE.WebGLRenderTarget;
   normalMaterial: THREE.Material;
 
   constructor(
@@ -27,12 +29,41 @@ export default class PixelPass extends Pass {
     this.camera = camera;
     this.fsQuad = new FullScreenQuad(this.material());
 
+    this.topdownCamera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    // this.topdownCamera = new THREE.OrthographicCamera(
+    //   -window.innerWidth / 2,
+    //   window.innerWidth / 2,
+    //   window.innerHeight / 2,
+    //   -window.innerHeight / 2,
+    //   0.1,
+    //   1000
+    // );
+    this.topdownCamera.position.set(0, 5, 0);
+    this.topdownCamera.lookAt(new THREE.Vector3(0, 0, 0));
+    this.topdownCamera.layers.enable(1);
+    // (this.topdownCamera as THREE.OrthographicCamera).updateProjectionMatrix();
+    // (this.topdownCamera as THREE.PerspectiveCamera).aspect =
+    // window.innerWidth / window.innerHeight;
+    (this.topdownCamera as THREE.PerspectiveCamera).updateProjectionMatrix();
+    (this.topdownCamera as THREE.PerspectiveCamera).updateMatrixWorld();
+    // (this.topdownCamera as THREE.PerspectiveCamera).updateMatrix();
+
     this.rgbRenderTarget = this.createRenderTarget(
       resolution.x,
       resolution.y,
       true
     );
     this.normalRenderTarget = this.createRenderTarget(
+      resolution.x,
+      resolution.y,
+      false
+    );
+    this.groundRenderTarget = this.createRenderTarget(
       resolution.x,
       resolution.y,
       false
@@ -45,6 +76,33 @@ export default class PixelPass extends Pass {
     renderer.setRenderTarget(this.rgbRenderTarget);
     renderer.render(this.scene, this.camera);
 
+    // Remove all objects from scene
+    const invisibleLayer = new THREE.Layers();
+    invisibleLayer.set(0);
+    this.scene.children.forEach((child) => {
+      if (child instanceof THREE.Mesh && child.layers.test(invisibleLayer)) {
+        child.material.colorWrite = false;
+        child.material.depthWrite = false;
+      }
+    });
+    renderer.setRenderTarget(this.groundRenderTarget);
+    renderer.render(this.scene, this.topdownCamera);
+    this.scene.children.forEach((child) => {
+      if (
+        (child instanceof THREE.Mesh || child instanceof THREE.InstancedMesh) &&
+        child.layers.test(invisibleLayer)
+      ) {
+        child.material.colorWrite = true;
+        child.material.depthWrite = true;
+      }
+
+      if (child instanceof THREE.InstancedMesh) {
+        child.material.uniforms["tGround"] = {
+          value: this.groundRenderTarget.texture,
+        };
+      }
+    });
+
     const prevOverrideMaterial = this.scene.overrideMaterial;
     renderer.setRenderTarget(this.normalRenderTarget);
     this.scene.overrideMaterial = this.normalMaterial;
@@ -55,6 +113,7 @@ export default class PixelPass extends Pass {
     uniforms.tDiffuse.value = this.rgbRenderTarget.texture;
     uniforms.tDepth.value = this.rgbRenderTarget.depthTexture;
     uniforms.tNormal.value = this.normalRenderTarget.texture;
+    uniforms.tGround.value = this.groundRenderTarget.texture;
 
     if (this.renderToScreen) {
       renderer.setRenderTarget(null);
@@ -74,6 +133,7 @@ export default class PixelPass extends Pass {
         tDiffuse: { value: null },
         tDepth: { value: null },
         tNormal: { value: null },
+        tGround: { value: null },
         uDirectionalLight: {
           value: new THREE.Vector3(5, 4, 3),
         },

@@ -26,15 +26,33 @@ export function createScene(options?: Options) {
   scene.background = new THREE.Color(userOptions.backgroundColor);
 
   // Camera
+  // const camera = new THREE.PerspectiveCamera(
+  //   75,
+  //   window.innerWidth / window.innerHeight,
+  //   0.1,
+  //   1000
+  // );
+  // camera.position.z = 4;
+  // camera.position.y = 4;
+  // // camera.layers.disable(0);
+  // camera.layers.enable(1);
+
   const camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
     0.1,
     1000
   );
-  camera.position.z = 4;
-  camera.position.y = 4;
-  // camera.layers.disable(0);
+  // camera = new THREE.OrthographicCamera(
+  //   -window.innerWidth / 2,
+  //   window.innerWidth / 2,
+  //   window.innerHeight / 2,
+  //   -window.innerHeight / 2,
+  //   0.1,
+  //   1000
+  // );
+  camera.position.set(0, 5, 0);
+  camera.lookAt(new THREE.Vector3(0, 0, 0));
   camera.layers.enable(1);
 
   // Lighting
@@ -60,7 +78,7 @@ export function createScene(options?: Options) {
   );
   scene.add(directionalLightHelper);
 
-  const pointLight = new THREE.PointLight(0xffff00, 5);
+  const pointLight = new THREE.PointLight(0xff0000, 10);
   pointLight.position.set(2, 2, 0);
   pointLight.castShadow = true;
   pointLight.layers.set(1);
