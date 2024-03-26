@@ -103,8 +103,8 @@
 
       	void main() {
 					vec4 clipPosition = uTopdownProjectionMatrix * uTopdownViewMatrix * vWorldPosition;
-					vec2 ndc = res.xy / res.w;
-					vec2 groundUV = res2 * 0.5 + 0.5;
+					vec2 ndc = clipPosition.xy / clipPosition.w;
+					vec2 groundUV = ndc * 0.5 + 0.5;
 					vec4 groundTexel = texture2D(tGround, groundUV);
 
       		vec3 baseColor = vec3(0.41, 1.0, 0.5);
