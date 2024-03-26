@@ -122,7 +122,7 @@
     const toon = createToonMaterial(new THREE.Color(0x00ff00));
     toon.side = THREE.DoubleSide;
 
-    const instanceCount = 1000;
+    const instanceCount = 5000;
     const instancedGrass = new THREE.InstancedMesh(
       grassGeometry,
       grassMaterial,
@@ -134,6 +134,8 @@
       // toon,
       instanceCount
     );
+    instancedGrass.layers.set(2);
+    camera.layers.enable(2);
     scene.add(instancedGrass);
 
     const dummyGrass = new THREE.Object3D();
@@ -143,18 +145,20 @@
         0,
         (Math.random() - 0.5) * 10
       );
-      // dummyGrass.scale.setScalar(0.5 + Math.random() * 0.5);
-      // dummyGrass.rotation.y = (Math.random() * Math.PI) / 5;
+      dummyGrass.scale.setScalar(0.5 + Math.random() * 0.5);
+      dummyGrass.rotation.y = (Math.random() * Math.PI) / 5;
       dummyGrass.castShadow = true;
       dummyGrass.updateMatrix();
       instancedGrass.setMatrixAt(i, dummyGrass.matrix);
     }
 
     const pixelPass = new PixelPass(resolution, scene, camera);
-    // const pixelPass2 = new PixelPass2(resolution);
+    const pixelPass2 = new PixelPass2(resolution, camera);
+
     composer.addPass(pixelPass);
+    composer.addPass(pixelPass2);
     // composer.addPass(new RenderPass(scene, camera));
-    // composer.addPass(new ShaderPass(GammaCorrectionShader));
+    composer.addPass(new ShaderPass(GammaCorrectionShader));
     // composer.addPass(pixelPass2);
 
     const shaderFolder = gui.addFolder("Shader");

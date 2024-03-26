@@ -56,12 +56,12 @@ export default class PixelPass extends Pass {
     this.rgbRenderTarget = this.createRenderTarget(
       resolution.x,
       resolution.y,
-      true
+      false
     );
     this.normalRenderTarget = this.createRenderTarget(
       resolution.x,
       resolution.y,
-      false
+      true
     );
     this.groundRenderTarget = this.createRenderTarget(
       resolution.x,
@@ -73,6 +73,7 @@ export default class PixelPass extends Pass {
   }
 
   render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget) {
+    // console.log("PIXEL PASS RENDER");
     renderer.setRenderTarget(this.rgbRenderTarget);
     renderer.render(this.scene, this.camera);
 
@@ -103,15 +104,17 @@ export default class PixelPass extends Pass {
       }
     });
 
+    this.camera.layers.disable(2);
     const prevOverrideMaterial = this.scene.overrideMaterial;
     renderer.setRenderTarget(this.normalRenderTarget);
     this.scene.overrideMaterial = this.normalMaterial;
     renderer.render(this.scene, this.camera);
     this.scene.overrideMaterial = prevOverrideMaterial;
+    this.camera.layers.enable(2);
 
     const uniforms = (this.fsQuad.material as THREE.ShaderMaterial).uniforms;
     uniforms.tDiffuse.value = this.rgbRenderTarget.texture;
-    uniforms.tDepth.value = this.rgbRenderTarget.depthTexture;
+    uniforms.tDepth.value = this.normalRenderTarget.depthTexture;
     uniforms.tNormal.value = this.normalRenderTarget.texture;
     uniforms.tGround.value = this.groundRenderTarget.texture;
 

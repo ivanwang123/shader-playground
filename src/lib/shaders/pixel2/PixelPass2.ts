@@ -5,10 +5,12 @@ import { Pass, FullScreenQuad } from "three/examples/jsm/Addons.js";
 export default class PixelatePass extends Pass {
   fsQuad: FullScreenQuad;
   resolution: THREE.Vector2;
+  camera: THREE.Camera;
 
-  constructor(resolution: THREE.Vector2) {
+  constructor(resolution: THREE.Vector2, camera: THREE.Camera) {
     super();
     this.resolution = resolution;
+    this.camera = camera;
     this.fsQuad = new FullScreenQuad(this.material());
   }
 
@@ -17,6 +19,8 @@ export default class PixelatePass extends Pass {
     writeBuffer: WebGLRenderTarget,
     readBuffer: WebGLRenderTarget
   ) {
+    // console.log("PIXEL PASS 2 RENDER");
+    this.camera.layers.enable(2);
     // @ts-ignore
     const uniforms = this.fsQuad.material.uniforms;
     uniforms.tDiffuse.value = readBuffer.texture;

@@ -6,7 +6,7 @@ export function addGround(scene: THREE.Scene) {
   const groundGeometry = new THREE.PlaneGeometry(10, 10);
   // const groundMaterial = new THREE.MeshStandardMaterial({ color: 0xceb1be });
   // const groundMaterial = createToonMaterial(new THREE.Color(0xceb1be));
-  const groundMaterial = createToonMaterial(new THREE.Color(0xaaaaaa));
+  const groundMaterial = createToonMaterial(new THREE.Color(0x999999));
   const ground = new THREE.Mesh<any, any, any>(groundGeometry, groundMaterial);
   ground.receiveShadow = true;
   ground.rotateX(THREE.MathUtils.degToRad(-90));
