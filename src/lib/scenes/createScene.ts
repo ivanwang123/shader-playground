@@ -51,7 +51,7 @@ export function createScene(options?: Options) {
   //   0.1,
   //   1000
   // );
-  camera.position.set(0, 5, 0);
+  camera.position.set(0, 8, 8);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
   camera.layers.enable(1);
 
@@ -67,7 +67,7 @@ export function createScene(options?: Options) {
     0xffffff,
     userOptions.directionalLightIntensity
   );
-  directionalLight.position.set(5, 4, 3);
+  directionalLight.position.set(-5, 4, 3);
   directionalLight.castShadow = userOptions.castShadow;
   directionalLight.layers.set(1);
   scene.add(directionalLight);

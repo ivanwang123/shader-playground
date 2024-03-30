@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Reflector } from "$lib/scenes/reflector";
   import { onMount } from "svelte";
   import * as THREE from "three";
   import { OrbitControls } from "three/examples/jsm/Addons.js";
@@ -84,6 +85,12 @@
     sphere.castShadow = true;
 
     scene.add(sphere);
+
+    // Reflector
+    const reflectorGeometry = new THREE.PlaneGeometry(5, 5, 5);
+    const reflector = new Reflector(reflectorGeometry);
+    reflector.position.set(0, 2.5, -2);
+    scene.add(reflector);
 
     const renderer = new THREE.WebGLRenderer({
       antialias: false,

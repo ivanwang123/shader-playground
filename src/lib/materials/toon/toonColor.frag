@@ -16,16 +16,12 @@ const float levels = 3.0;
 
 void main() {
   // Point shadow map
-  float pointShadowIntensity = 1.0;
-  if (pointLights.length() > 0) {
+  PointLightShadow pointShadow = pointLightShadows[0];
 
-    PointLightShadow pointShadow = pointLightShadows[0];
-
-    pointShadowIntensity = getPointShadow(
-        pointShadowMap[0], pointShadow.shadowMapSize, pointShadow.shadowBias,
-        pointShadow.shadowRadius, vPointShadowCoord[0],
-        pointShadow.shadowCameraNear, pointShadow.shadowCameraFar);
-  }
+  float pointShadowIntensity = getPointShadow(
+      pointShadowMap[0], pointShadow.shadowMapSize, pointShadow.shadowBias,
+      pointShadow.shadowRadius, vPointShadowCoord[0],
+      pointShadow.shadowCameraNear, pointShadow.shadowCameraFar);
 
   // Directional shadow map
   DirectionalLightShadow directionalShadow = directionalLightShadows[0];

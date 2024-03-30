@@ -14,6 +14,7 @@ export default class PixelPass extends Pass {
   topdownCamera: THREE.Camera;
   fsQuad: FullScreenQuad;
   rgbRenderTarget: THREE.WebGLRenderTarget;
+  rgbGrassRenderTarget: THREE.WebGLRenderTarget;
   normalRenderTarget: THREE.WebGLRenderTarget;
   groundRenderTarget: THREE.WebGLRenderTarget;
   normalMaterial: THREE.Material;
@@ -58,6 +59,11 @@ export default class PixelPass extends Pass {
       resolution.y,
       false
     );
+    this.rgbGrassRenderTarget = this.createRenderTarget(
+      resolution.x,
+      resolution.y,
+      true
+    );
     this.normalRenderTarget = this.createRenderTarget(
       resolution.x,
       resolution.y,
@@ -74,7 +80,18 @@ export default class PixelPass extends Pass {
 
   render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget) {
     // console.log("PIXEL PASS RENDER");
+    // this.scene.children.forEach((child) => {
+    //   if (child instanceof THREE.InstancedMesh) {
+    //     child.material.colorWrite = false;
+    //     child.material.depthWrite = false;
+    //   }
+    // });
+    this.camera.layers.disable(3);
     renderer.setRenderTarget(this.rgbRenderTarget);
+    renderer.render(this.scene, this.camera);
+    this.camera.layers.enable(3);
+
+    renderer.setRenderTarget(this.rgbGrassRenderTarget);
     renderer.render(this.scene, this.camera);
 
     // Remove all objects from scene
@@ -89,10 +106,7 @@ export default class PixelPass extends Pass {
     renderer.setRenderTarget(this.groundRenderTarget);
     renderer.render(this.scene, this.topdownCamera);
     this.scene.children.forEach((child) => {
-      if (
-        (child instanceof THREE.Mesh || child instanceof THREE.InstancedMesh) &&
-        child.layers.test(invisibleLayer)
-      ) {
+      if (child instanceof THREE.Mesh && child.layers.test(invisibleLayer)) {
         child.material.colorWrite = true;
         child.material.depthWrite = true;
       }
@@ -104,6 +118,12 @@ export default class PixelPass extends Pass {
       }
     });
 
+    // this.scene.children.forEach((child) => {
+    //   if (child instanceof THREE.InstancedMesh) {
+    //     child.material.depthWrite = false;
+    //     // child.material.colorWrite = false;
+    //   }
+    // });
     this.camera.layers.disable(2);
     const prevOverrideMaterial = this.scene.overrideMaterial;
     renderer.setRenderTarget(this.normalRenderTarget);
@@ -111,17 +131,26 @@ export default class PixelPass extends Pass {
     renderer.render(this.scene, this.camera);
     this.scene.overrideMaterial = prevOverrideMaterial;
     this.camera.layers.enable(2);
+    // this.scene.children.forEach((child) => {
+    //   if (child instanceof THREE.InstancedMesh) {
+    //     // child.material.colorWrite = true;
+    //     child.material.depthWrite = true;
+    //   }
+    // });
 
     const uniforms = (this.fsQuad.material as THREE.ShaderMaterial).uniforms;
     uniforms.tDiffuse.value = this.rgbRenderTarget.texture;
     uniforms.tDepth.value = this.normalRenderTarget.depthTexture;
     uniforms.tNormal.value = this.normalRenderTarget.texture;
-    uniforms.tGround.value = this.groundRenderTarget.texture;
+    uniforms.tGrassDiffuse.value = this.rgbGrassRenderTarget.texture;
+    uniforms.tGrassDepth.value = this.rgbGrassRenderTarget.depthTexture;
 
     if (this.renderToScreen) {
       renderer.setRenderTarget(null);
     } else {
       renderer.setRenderTarget(writeBuffer);
+      writeBuffer.depthTexture = this.normalRenderTarget.depthTexture;
+      writeBuffer.depthBuffer = true;
       if (this.clear) {
         renderer.clear();
       }
@@ -136,7 +165,8 @@ export default class PixelPass extends Pass {
         tDiffuse: { value: null },
         tDepth: { value: null },
         tNormal: { value: null },
-        tGround: { value: null },
+        tGrassDiffuse: { value: null },
+        tGrassDepth: { value: null },
         uDirectionalLight: {
           value: new THREE.Vector3(5, 4, 3),
         },

@@ -5,6 +5,7 @@ import toonTextureFrag from "./toonTexture.frag";
 import toonColorFrag from "./toonColor.frag";
 
 export function createToonMaterial(texture: THREE.Texture | THREE.Color) {
+  console.log("CREATE TOON MATERIAL");
   let isTexture = true;
   if (texture instanceof THREE.Color) {
     isTexture = false;

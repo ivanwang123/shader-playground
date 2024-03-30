@@ -53,6 +53,7 @@ export class CustomComposer {
         this.options.animateFunc(this.renderer);
       }
       this.composer.render();
+      // this.renderer.render(this.scene, this.camera);
     };
     animation();
   }

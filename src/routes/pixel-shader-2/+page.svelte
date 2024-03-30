@@ -9,21 +9,26 @@
     addCube,
     addGround,
     addMonkey,
+    addPuddle,
     addSphere,
+    addWaterfall,
   } from "$lib/scenes/addModels";
   import {
     GammaCorrectionShader,
-    GodRaysDepthMaskShader,
     RenderPass,
     ShaderPass,
   } from "three/examples/jsm/Addons.js";
   import PixelPass2 from "$lib/shaders/pixel2/PixelPass2";
   import toonColorFrag from "$lib/materials/toon/toonColor.frag";
   import { createToonMaterial } from "$lib/materials/toon/createToonMaterial";
+  import { Reflector } from "$lib/scenes/reflector";
+  import { reflect } from "three/examples/jsm/nodes/Nodes.js";
 
   let canvas: HTMLCanvasElement;
 
   const { scene, camera, gui } = createScene();
+
+  const clock = new THREE.Clock();
 
   const intensity = {
     value: 3,
@@ -35,12 +40,17 @@
   );
 
   onMount(() => {
-    const { composer, resize } = createComposer(canvas, scene, camera);
-
     addGround(scene);
     addCube(scene);
     addSphere(scene);
+    const waterfall = addWaterfall(scene);
+    const { puddle, water } = addPuddle(scene, camera);
     // addMonkey(scene);
+
+    const reflectorGeometry = new THREE.PlaneGeometry(5, 5);
+    const reflector = new Reflector(reflectorGeometry);
+    reflector.position.set(0, 0, -2);
+    scene.add(reflector);
 
     const topdownCamera = new THREE.PerspectiveCamera(
       75,
@@ -71,18 +81,21 @@
       ...THREE.UniformsLib.lights,
       uGlossiness: { value: 5 },
       uColor: { value: new THREE.Color(0x00ff00) },
+      uTime: { value: 0 },
       uResolution: { value: resolution },
       uTopdownViewMatrix: { value: topdownCamera.matrixWorldInverse },
       uTopdownProjectionMatrix: { value: topdownCamera.projectionMatrix },
       tGround: { value: null },
     };
 
-    // const grassGeometry = new THREE.PlaneGeometry(0.5, 1, 1, 1);
+    // const grassGeometry = new THREE.PlaneGeometry(0.1, 0.5, 1, 4);
     const grassGeometry = new THREE.BoxGeometry(0.1, 0.5, 0.1);
     // grassGeometry.rotateX((Math.PI * 90) / 180);
     grassGeometry.translate(0, 0.2, 0);
     const grassMaterial = new THREE.ShaderMaterial({
       vertexShader: `
+				uniform float uTime;
+
       	varying vec2 vUv;
 				varying vec4 vWorldPosition;
 
@@ -90,7 +103,21 @@
       		vUv = uv;
 					vWorldPosition = instanceMatrix[3];
 
-      		gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+					// VERTEX POSITION
+    
+					vec4 mvPosition = vec4( position, 1.0 );
+					mvPosition = instanceMatrix * mvPosition;
+					
+					// here the displacement is made stronger on the blades tips.
+					float dispPower = 1.0 - cos( uv.y * 3.1416 / 2.0 );
+					
+					float displacement = sin( mvPosition.z + uTime * 2.0 ) * ( 0.08 * dispPower );
+					mvPosition.z += displacement;
+					
+					vec4 modelViewPosition = modelViewMatrix * mvPosition;
+					gl_Position = projectionMatrix * modelViewPosition;
+
+      		// gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
       	}
       `,
       fragmentShader: `
@@ -118,9 +145,6 @@
       uniforms,
       lights: true,
     });
-
-    const toon = createToonMaterial(new THREE.Color(0x00ff00));
-    toon.side = THREE.DoubleSide;
 
     const instanceCount = 5000;
     const instancedGrass = new THREE.InstancedMesh(
@@ -153,12 +177,25 @@
     }
 
     const pixelPass = new PixelPass(resolution, scene, camera);
-    const pixelPass2 = new PixelPass2(resolution, camera);
+    const pixelPass2 = new PixelPass2(resolution, scene, camera);
 
-    composer.addPass(pixelPass);
-    composer.addPass(pixelPass2);
-    // composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new ShaderPass(GammaCorrectionShader));
+    const { composer, resize } = createComposer(canvas, scene, camera, {
+      animateFunc: () => {
+        instancedGrass.material.uniforms.uTime.value = clock.getElapsedTime();
+        instancedGrass.material.uniformsNeedUpdate = true;
+        waterfall.material.uniforms.uTime.value = clock.getElapsedTime();
+        water.material.uniforms.uTime.value = clock.getElapsedTime();
+      },
+    });
+
+    // composer.addPass(pixelPass);
+
+    water.material.uniforms.tDepth.value =
+      pixelPass.normalRenderTarget.depthTexture;
+    water.material.uniforms.tDiffuse.value = pixelPass.rgbRenderTarget.texture;
+    // composer.addPass(pixelPass2);
+    composer.addPass(new RenderPass(scene, camera));
+    // composer.addPass(new ShaderPass(GammaCorrectionShader));
     // composer.addPass(pixelPass2);
 
     const shaderFolder = gui.addFolder("Shader");
