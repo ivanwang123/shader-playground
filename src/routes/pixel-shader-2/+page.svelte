@@ -188,14 +188,14 @@
       },
     });
 
-    // composer.addPass(pixelPass);
+    composer.addPass(pixelPass);
 
     water.material.uniforms.tDepth.value =
       pixelPass.normalRenderTarget.depthTexture;
     water.material.uniforms.tDiffuse.value = pixelPass.rgbRenderTarget.texture;
-    // composer.addPass(pixelPass2);
-    composer.addPass(new RenderPass(scene, camera));
-    // composer.addPass(new ShaderPass(GammaCorrectionShader));
+    composer.addPass(pixelPass2);
+    // composer.addPass(new RenderPass(scene, camera));
+    composer.addPass(new ShaderPass(GammaCorrectionShader));
     // composer.addPass(pixelPass2);
 
     const shaderFolder = gui.addFolder("Shader");
