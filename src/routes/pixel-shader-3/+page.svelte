@@ -21,6 +21,7 @@
   import { addWater } from "./models/water/water";
   import { DEPTHLESS_LAYER } from "./constants";
   import { PixelPass2 } from "./postprocess/pixel/PixelPass2";
+  import { RenderedTextures } from "./RenderedTextures";
 
   let canvas: HTMLCanvasElement;
 
@@ -51,17 +52,17 @@
   const sphere = addSphere({ position: new THREE.Vector3(2.5, 0, 1) });
   scene.add(sphere);
 
-  const water = addWater(camera);
-  scene.add(water);
+  // const water = addWater(camera);
+  // scene.add(water);
 
   // const waterfall = addWaterfall({ position: new THREE.Vector3(-3, 5, 0) });
   // scene.add(waterfall);
 
-  const grass = addGrass(topdownCamera);
-  scene.add(grass);
+  // const grass = addGrass(topdownCamera);
+  // scene.add(grass);
 
-  const texture = addTexture(resolution);
-  scene.add(texture);
+  // const texture = addTexture(resolution);
+  // scene.add(texture);
 
   onMount(() => {
     // Renderer
@@ -74,18 +75,28 @@
     renderer.shadowMap.type = THREE.BasicShadowMap;
     renderer.shadowMap.enabled = true;
 
+    // Rendered textures
+    const renderedTextures = new RenderedTextures(
+      renderer,
+      scene,
+      camera,
+      topdownCamera,
+      resolution
+    );
+
     // Composer
     const composer = new EffectComposer(renderer);
     composer.setSize(window.innerWidth, window.innerHeight);
 
-    const pixelPass = new PixelPass(resolution, scene, camera, topdownCamera);
+    const pixelPass = new PixelPass(resolution, camera, renderedTextures);
     const pixelPass2 = new PixelPass2(resolution, scene, camera);
 
-    texture.material.uniforms.tTexture.value =
-      pixelPass.groundRenderTarget.depthTexture;
+    // texture.material.uniforms.tTexture.value =
+    //   pixelPass.groundRenderTarget.depthTexture;
 
     composer.addPass(pixelPass);
     // composer.addPass(pixelPass2);
+    // composer.addPass(new RenderPass(scene, camera));
 
     composer.addPass(new ShaderPass(GammaCorrectionShader));
 
@@ -98,31 +109,16 @@
 
       const elapsedTime = clock.getElapsedTime();
 
-      grass.material.uniforms.uTime.value = elapsedTime;
+      renderedTextures.renderTextures();
+
+      // grass.material.uniforms.uTime.value = elapsedTime;
       // waterfall.material.uniforms.uTime.value = elapsedTime;
-      water.material.uniforms.uTime.value = elapsedTime;
+      // water.material.uniforms.uTime.value = elapsedTime;
 
-      const renderTarget = new THREE.WebGLRenderTarget(
-        resolution.x,
-        resolution.y,
-        {
-          depthTexture: new THREE.DepthTexture(resolution.x, resolution.y),
-          depthBuffer: true,
-        }
-      );
-      renderTarget.texture.format = THREE.RGBAFormat;
-      renderTarget.texture.minFilter = THREE.NearestFilter;
-      renderTarget.texture.magFilter = THREE.NearestFilter;
-      renderTarget.texture.generateMipmaps = false;
-      renderTarget.stencilBuffer = false;
-
-      camera.layers.disable(DEPTHLESS_LAYER);
-      renderer.setRenderTarget(renderTarget);
-      renderer.render(scene, camera);
-      camera.layers.enable(DEPTHLESS_LAYER);
-
-      water.material.uniforms.tDiffuse.value = renderTarget.texture;
-      water.material.uniforms.tDepth.value = renderTarget.depthTexture;
+      // water.material.uniforms.tDiffuse.value =
+      //   renderedTextures.diffuseDepthlessTexture;
+      // water.material.uniforms.tDepth.value =
+      //   renderedTextures.depthDepthlessTexture;
 
       composer.render();
     };

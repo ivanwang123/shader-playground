@@ -4,10 +4,10 @@ import { createToonMaterial } from "../materials/toon/createToonMaterial";
 
 export function addCube(options?: Options) {
   const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-  // const cubeMaterial = new THREE.MeshStandardMaterial({
-  //   color: options?.color || 0xff773d,
-  // });
-  const cubeMaterial = createToonMaterial(new THREE.Color(0xff773d));
+  const cubeMaterial = new THREE.MeshStandardMaterial({
+    color: options?.color || 0xff773d,
+  });
+  // const cubeMaterial = createToonMaterial(new THREE.Color(0xff773d));
 
   const cube = new THREE.Mesh<any, any, any>(cubeGeometry, cubeMaterial);
   if (options?.position) {

@@ -62,7 +62,7 @@ export function addWater(camera: THREE.Camera) {
   // water.attach(wall4);
   // water.attach(floor);
   // water.position.set(7.5, 0.5, 0);
-  water.position.set(0, 0.1, 0);
+  water.position.set(0, 1.1, 0);
 
   return water;
 }
