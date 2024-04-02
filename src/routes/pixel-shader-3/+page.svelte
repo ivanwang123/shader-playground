@@ -22,7 +22,6 @@
   import { DEPTHLESS_LAYER } from "./constants";
   import { PixelPass2 } from "./postprocess/pixel/PixelPass2";
   import { RenderedTextures } from "./RenderedTextures";
-  import { RenderedTextures2 } from "./RenderedTextures2";
 
   let canvas: HTMLCanvasElement;
 
@@ -84,23 +83,13 @@
       topdownCamera,
       resolution
     );
-    const renderedTextures2 = new RenderedTextures2(
-      renderer,
-      scene,
-      camera,
-      topdownCamera,
-      resolution
-    );
 
     // Composer
     const composer = new EffectComposer(renderer);
     composer.setSize(window.innerWidth, window.innerHeight);
 
-    const pixelPass = new PixelPass(resolution, camera, renderedTextures2);
+    const pixelPass = new PixelPass(resolution, camera, renderedTextures);
     const pixelPass2 = new PixelPass2(resolution, scene, camera);
-
-    // texture.material.uniforms.tTexture.value =
-    //   pixelPass.groundRenderTarget.depthTexture;
 
     composer.addPass(pixelPass);
     // composer.addPass(pixelPass2);
@@ -115,29 +104,24 @@
     const animate = () => {
       requestAnimationFrame(animate);
 
+      // Elapsed time
       const elapsedTime = clock.getElapsedTime();
 
-      // grass.material.uniforms.uTime.value = elapsedTime;
-      // waterfall.material.uniforms.uTime.value = elapsedTime;
+      // Reset textures
+      renderedTextures.resetTextures();
+
+      // Set uniforms
       water.material.uniforms.uTime.value = elapsedTime;
-
-      // const diffuseAndDepthDepthless =
-      //   renderedTextures.renderDiffuseAndDepthDepthless();
-      // renderedTextures.renderNormalDepthless();
-
-      // water.material.uniforms.tDiffuse.value = diffuseAndDepthDepthless.texture;
-      // water.material.uniforms.tDepth.value =
-      //   diffuseAndDepthDepthless.depthTexture;
-
-      // texture.material.uniforms.tTexture.value =
-      //   diffuseAndDepthDepthless.depthTexture;
-
-      renderedTextures2.resetTextures();
+      // waterfall.material.uniforms.uTime.value = elapsedTime;
+      // grass.material.uniforms.uTime.value = elapsedTime;
 
       water.material.uniforms.tDiffuse.value =
-        renderedTextures2.diffuseDepthlessTexture;
+        renderedTextures.diffuseDepthlessTexture;
       water.material.uniforms.tDepth.value =
-        renderedTextures2.depthDepthlessTexture;
+        renderedTextures.depthDepthlessTexture;
+
+      texture.material.uniforms.tTexture.value =
+        renderedTextures.depthDepthlessTexture;
 
       composer.render();
     };
