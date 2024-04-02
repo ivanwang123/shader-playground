@@ -5,11 +5,12 @@ import pixelVert from "./pixel.vert";
 import pixelFrag from "./pixel.frag";
 import { DEPTHLESS_LAYER, GROUND_LAYER } from "../../constants";
 import type { RenderedTextures } from "../../RenderedTextures";
+import type { RenderedTextures2 } from "../../RenderedTextures2";
 
 export default class PixelPass extends Pass {
   resolution: THREE.Vector2;
   camera: THREE.Camera;
-  renderedTextures: RenderedTextures;
+  renderedTextures: RenderedTextures2;
   fsQuad: FullScreenQuad;
 
   // diffuseRenderTarget: THREE.WebGLRenderTarget;
@@ -22,7 +23,7 @@ export default class PixelPass extends Pass {
   constructor(
     resolution: THREE.Vector2,
     camera: THREE.Camera,
-    renderedTextures: RenderedTextures
+    renderedTextures: RenderedTextures2
   ) {
     super();
 
@@ -105,20 +106,25 @@ export default class PixelPass extends Pass {
 
     // Set uniforms
     const uniforms = (this.fsQuad.material as THREE.ShaderMaterial).uniforms;
-    const diffuseAndDepthDepthless =
-      this.renderedTextures.diffuseAndDepthDepthlessRenderTarget;
-    uniforms.tDiffuse.value = diffuseAndDepthDepthless.texture;
-    uniforms.tDepth.value = diffuseAndDepthDepthless.depthTexture;
+    // const diffuseAndDepthDepthless =
+    //   this.renderedTextures.diffuseAndDepthDepthlessRenderTarget;
+    // uniforms.tDiffuse.value = diffuseAndDepthDepthless.texture;
+    // uniforms.tDepth.value = diffuseAndDepthDepthless.depthTexture;
+    uniforms.tDiffuse.value = this.renderedTextures.diffuseDepthlessTexture;
+    uniforms.tDepth.value = this.renderedTextures.depthDepthlessTexture;
 
-    uniforms.tNormal.value =
-      this.renderedTextures.normalDepthlessRenderTarget.texture;
-    // uniforms.tNormal.value = this.renderedTextures.renderNormalDepthless();
-    this.renderedTextures.renderDiffuseAndDepth();
+    // uniforms.tNormal.value =
+    //   this.renderedTextures.normalDepthlessRenderTarget.texture;
+    uniforms.tNormal.value = this.renderedTextures.normalDepthlessTexture;
+    // this.renderedTextures.renderDiffuseAndDepth();
 
-    uniforms.tGrassDiffuse.value =
-      this.renderedTextures.diffuseAndDepthRenderTarget.texture;
-    uniforms.tGrassDepth.value =
-      this.renderedTextures.diffuseAndDepthRenderTarget.depthTexture;
+    // uniforms.tGrassDiffuse.value =
+    //   this.renderedTextures.diffuseAndDepthRenderTarget.texture;
+    // uniforms.tGrassDepth.value =
+    //   this.renderedTextures.diffuseAndDepthRenderTarget.depthTexture;
+    uniforms.tGrassDiffuse.value = this.renderedTextures.diffuseTexture;
+    uniforms.tGrassDepth.value = this.renderedTextures.depthTexture;
+
     // const diffuseAndDepth = this.renderedTextures.renderDiffuseAndDepth();
     // uniforms.tGrassDiffuse.value = diffuseAndDepth.texture;
     // uniforms.tGrassDepth.value = diffuseAndDepth.depthTexture;
