@@ -103,15 +103,25 @@ export default class PixelPass extends Pass {
     // this.scene.overrideMaterial = prevOverrideMaterial;
     // this.camera.layers.enable(DEPTHLESS_LAYER);
 
-    this.renderedTextures.renderTextures();
-
     // Set uniforms
     const uniforms = (this.fsQuad.material as THREE.ShaderMaterial).uniforms;
-    uniforms.tDiffuse.value = this.renderedTextures.diffuseDepthlessTexture;
-    uniforms.tDepth.value = this.renderedTextures.depthDepthlessTexture;
-    uniforms.tNormal.value = this.renderedTextures.normalDepthlessTexture;
-    uniforms.tGrassDiffuse.value = this.renderedTextures.diffuseTexture;
-    uniforms.tGrassDepth.value = this.renderedTextures.depthTexture;
+    const diffuseAndDepthDepthless =
+      this.renderedTextures.diffuseAndDepthDepthlessRenderTarget;
+    uniforms.tDiffuse.value = diffuseAndDepthDepthless.texture;
+    uniforms.tDepth.value = diffuseAndDepthDepthless.depthTexture;
+
+    uniforms.tNormal.value =
+      this.renderedTextures.normalDepthlessRenderTarget.texture;
+    // uniforms.tNormal.value = this.renderedTextures.renderNormalDepthless();
+    this.renderedTextures.renderDiffuseAndDepth();
+
+    uniforms.tGrassDiffuse.value =
+      this.renderedTextures.diffuseAndDepthRenderTarget.texture;
+    uniforms.tGrassDepth.value =
+      this.renderedTextures.diffuseAndDepthRenderTarget.depthTexture;
+    // const diffuseAndDepth = this.renderedTextures.renderDiffuseAndDepth();
+    // uniforms.tGrassDiffuse.value = diffuseAndDepth.texture;
+    // uniforms.tGrassDepth.value = diffuseAndDepth.depthTexture;
 
     if (this.renderToScreen) {
       renderer.setRenderTarget(null);

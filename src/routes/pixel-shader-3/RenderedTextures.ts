@@ -8,21 +8,23 @@ export class RenderedTextures {
   topdownCamera: THREE.Camera;
   resolution: THREE.Vector2;
 
-  // diffuseRenderTarget: THREE.RenderTarget;
-  // depthRenderTarget: THREE.RenderTarget;
-  // diffuseDepthlessRenderTarget: THREE.RenderTarget;
-  // depthDepthlessRenderTarget: THREE.RenderTarget;
-  // normalDepthlessRenderTarget: THREE.RenderTarget;
-  // groundRenderTarget: THREE.RenderTarget;
-  // groundDepthRenderTarget: THREE.RenderTarget;
+  diffuseAndDepthRenderTarget: THREE.WebGLRenderTarget;
+  // depthRenderTarget: THREE.WebGLRenderTarget;
+  diffuseAndDepthDepthlessRenderTarget: THREE.WebGLRenderTarget;
+  // depthDepthlessRenderTarget: THREE.WebGLRenderTarget;
+  normalDepthlessRenderTarget: THREE.WebGLRenderTarget;
+  groundAndDepthRenderTarget: THREE.WebGLRenderTarget;
+  // groundDepthRenderTarget: THREE.WebGLRenderTarget;
 
-  diffuseTexture: THREE.Texture;
-  depthTexture: THREE.DepthTexture;
-  diffuseDepthlessTexture: THREE.Texture;
-  depthDepthlessTexture: THREE.DepthTexture;
-  normalDepthlessTexture: THREE.Texture;
-  groundTexture: THREE.Texture;
-  groundDepthTexture: THREE.DepthTexture;
+  // diffuseTexture: THREE.Texture;
+  // depthTexture: THREE.DepthTexture;
+  // diffuseDepthlessTexture: THREE.Texture;
+  // depthDepthlessTexture: THREE.DepthTexture;
+  // normalDepthlessTexture: THREE.Texture;
+  // groundTexture: THREE.Texture;
+  // groundDepthTexture: THREE.DepthTexture;
+
+  normalMaterial: THREE.MeshNormalMaterial;
 
   constructor(
     renderer: THREE.WebGLRenderer,
@@ -37,121 +39,90 @@ export class RenderedTextures {
     this.topdownCamera = topdownCamera;
     this.resolution = resolution;
 
-    const emptyTexture = new THREE.Texture();
-    const emptyDepthTexture = new THREE.DepthTexture(0, 0);
-
-    this.diffuseTexture = emptyTexture;
-    this.depthTexture = emptyDepthTexture;
-
-    this.diffuseDepthlessTexture = emptyTexture;
-    this.depthDepthlessTexture = emptyDepthTexture;
-    this.normalDepthlessTexture = emptyTexture;
-
-    this.groundTexture = emptyTexture;
-    this.groundDepthTexture = emptyDepthTexture;
-
-    this.renderTextures();
-  }
-
-  renderTextures() {
-    const diffuseRenderTarget = this.createDiffuseRenderTarget();
-    this.diffuseTexture = diffuseRenderTarget.texture;
-    this.depthTexture = diffuseRenderTarget.depthTexture;
-
-    this.diffuseDepthlessTexture =
-      this.createDiffuseDepthlessRenderTarget().texture;
-
-    const normalAndDepthRenderTarget = this.createNormalAndDepthRenderTarget();
-    this.normalDepthlessTexture = normalAndDepthRenderTarget.texture;
-    this.depthDepthlessTexture = normalAndDepthRenderTarget.depthTexture;
-
-    const groundRenderTarget = this.createGroundRenderTarget();
-    this.groundTexture = groundRenderTarget.texture;
-    this.groundDepthTexture = groundRenderTarget.depthTexture;
-  }
-
-  createDiffuseRenderTarget() {
-    const diffuseRenderTarget = this.createRenderTarget(
-      this.resolution.x,
-      this.resolution.y,
+    this.diffuseAndDepthRenderTarget = this.createRenderTarget(
+      resolution.x,
+      resolution.y,
       true
     );
-    this.renderer.setRenderTarget(diffuseRenderTarget);
-    this.renderer.render(this.scene, this.camera);
 
-    return diffuseRenderTarget;
+    this.diffuseAndDepthDepthlessRenderTarget = this.createRenderTarget(
+      resolution.x,
+      resolution.y,
+      true
+    );
+
+    this.normalDepthlessRenderTarget = this.createRenderTarget(
+      resolution.x,
+      resolution.y,
+      true
+    );
+
+    this.groundAndDepthRenderTarget = this.createRenderTarget(
+      resolution.x,
+      resolution.y,
+      true
+    );
+
+    this.normalMaterial = new THREE.MeshNormalMaterial();
   }
 
-  createDiffuseDepthlessRenderTarget() {
-    const diffuseDepthlessRenderTarget = this.createRenderTarget(
-      this.resolution.x,
-      this.resolution.y,
-      false
-    );
+  renderDiffuseAndDepth() {
+    this.renderer.setRenderTarget(this.diffuseAndDepthRenderTarget);
+    this.renderer.render(this.scene, this.camera);
+
+    return this.diffuseAndDepthRenderTarget;
+  }
+
+  renderDiffuseAndDepthDepthless() {
     this.camera.layers.disable(DEPTHLESS_LAYER);
-    this.renderer.setRenderTarget(diffuseDepthlessRenderTarget);
+    this.renderer.setRenderTarget(this.diffuseAndDepthDepthlessRenderTarget);
     this.renderer.render(this.scene, this.camera);
     this.camera.layers.enable(DEPTHLESS_LAYER);
 
-    return diffuseDepthlessRenderTarget;
+    return this.diffuseAndDepthDepthlessRenderTarget;
   }
 
-  createGroundRenderTarget() {
-    const groundRenderTarget = this.createRenderTarget(
-      this.resolution.x,
-      this.resolution.y,
-      true
-    );
+  renderNormalDepthless() {
+    this.camera.layers.disable(DEPTHLESS_LAYER);
+    const prevOverrideMaterial = this.scene.overrideMaterial;
+    this.renderer.setRenderTarget(this.normalDepthlessRenderTarget);
+    this.scene.overrideMaterial = this.normalMaterial;
+    this.renderer.render(this.scene, this.camera);
+    this.scene.overrideMaterial = prevOverrideMaterial;
+    this.camera.layers.enable(DEPTHLESS_LAYER);
 
+    return this.normalDepthlessRenderTarget;
+  }
+
+  renderGroundAndDepthTexture() {
     const groundLayer = new THREE.Layers();
     groundLayer.set(GROUND_LAYER);
+
     this.scene.children.forEach((child) => {
       if (child instanceof THREE.Mesh && !child.layers.test(groundLayer)) {
         child.material.colorWrite = false;
         child.material.depthWrite = false;
       }
     });
-    this.renderer.setRenderTarget(groundRenderTarget);
+
+    this.renderer.setRenderTarget(this.groundAndDepthRenderTarget);
     this.renderer.render(this.scene, this.topdownCamera);
+
     this.scene.children.forEach((child) => {
       if (child instanceof THREE.Mesh && !child.layers.test(groundLayer)) {
         child.material.colorWrite = true;
         child.material.depthWrite = true;
       }
-
-      // if (child instanceof THREE.InstancedMesh) {
-      //   child.material.uniforms["tGround"] = {
-      //     value: groundRenderTarget.texture,
-      //   };
-      //   child.material.uniforms["tGroundDepth"] = {
-      //     value: groundRenderTarget.depthTexture,
-      //   };
-      // }
     });
 
-    return groundRenderTarget;
+    return this.groundAndDepthRenderTarget;
   }
 
-  createNormalAndDepthRenderTarget() {
-    const normalRenderTarget = this.createRenderTarget(
-      this.resolution.x,
-      this.resolution.y,
-      true
-    );
-    const normalMaterial = new THREE.MeshNormalMaterial();
-
-    this.camera.layers.disable(DEPTHLESS_LAYER);
-    const prevOverrideMaterial = this.scene.overrideMaterial;
-    this.renderer.setRenderTarget(normalRenderTarget);
-    this.scene.overrideMaterial = normalMaterial;
-    this.renderer.render(this.scene, this.camera);
-    this.scene.overrideMaterial = prevOverrideMaterial;
-    this.camera.layers.enable(DEPTHLESS_LAYER);
-
-    return normalRenderTarget;
-  }
-
-  createRenderTarget(width: number, height: number, depthTexture: boolean) {
+  private createRenderTarget(
+    width: number,
+    height: number,
+    depthTexture: boolean
+  ) {
     const renderTarget = new THREE.WebGLRenderTarget(
       width,
       height,

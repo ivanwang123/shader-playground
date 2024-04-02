@@ -49,11 +49,11 @@
   const cube = addCube();
   scene.add(cube);
 
-  const sphere = addSphere({ position: new THREE.Vector3(2.5, 0, 1) });
+  const sphere = addSphere({ position: new THREE.Vector3(2.5, 0.5, 1) });
   scene.add(sphere);
 
-  // const water = addWater(camera);
-  // scene.add(water);
+  const water = addWater(camera);
+  scene.add(water);
 
   // const waterfall = addWaterfall({ position: new THREE.Vector3(-3, 5, 0) });
   // scene.add(waterfall);
@@ -61,8 +61,8 @@
   // const grass = addGrass(topdownCamera);
   // scene.add(grass);
 
-  // const texture = addTexture(resolution);
-  // scene.add(texture);
+  const texture = addTexture(resolution);
+  scene.add(texture);
 
   onMount(() => {
     // Renderer
@@ -109,16 +109,20 @@
 
       const elapsedTime = clock.getElapsedTime();
 
-      renderedTextures.renderTextures();
-
       // grass.material.uniforms.uTime.value = elapsedTime;
       // waterfall.material.uniforms.uTime.value = elapsedTime;
-      // water.material.uniforms.uTime.value = elapsedTime;
+      water.material.uniforms.uTime.value = elapsedTime;
 
-      // water.material.uniforms.tDiffuse.value =
-      //   renderedTextures.diffuseDepthlessTexture;
-      // water.material.uniforms.tDepth.value =
-      //   renderedTextures.depthDepthlessTexture;
+      const diffuseAndDepthDepthless =
+        renderedTextures.renderDiffuseAndDepthDepthless();
+      renderedTextures.renderNormalDepthless();
+
+      water.material.uniforms.tDiffuse.value = diffuseAndDepthDepthless.texture;
+      water.material.uniforms.tDepth.value =
+        diffuseAndDepthDepthless.depthTexture;
+
+      texture.material.uniforms.tTexture.value =
+        diffuseAndDepthDepthless.depthTexture;
 
       composer.render();
     };
