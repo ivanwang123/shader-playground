@@ -79,6 +79,20 @@ export function createScene(options?: Options) {
   );
   scene.add(directionalLightHelper);
 
+  // const directionalLight2 = new THREE.DirectionalLight(
+  //   0xffffff,
+  //   userOptions.directionalLightIntensity
+  // );
+  // directionalLight2.position.set(-5, 4, 3);
+  // directionalLight2.castShadow = userOptions.castShadow;
+  // scene.add(directionalLight2);
+
+  // const directionalLightHelper2 = new THREE.DirectionalLightHelper(
+  //   directionalLight2,
+  //   1
+  // );
+  // scene.add(directionalLightHelper2);
+
   const pointLight = new THREE.PointLight(0xff0000, 10);
   pointLight.position.set(2, 2, 0);
   pointLight.castShadow = true;
@@ -86,6 +100,14 @@ export function createScene(options?: Options) {
 
   const pointLightHelper = new THREE.PointLightHelper(pointLight, 0.1);
   scene.add(pointLightHelper);
+
+  const pointLight2 = new THREE.PointLight(0x0000ff, 10);
+  pointLight2.position.set(-2, 2, 0);
+  pointLight2.castShadow = true;
+  scene.add(pointLight2);
+
+  const pointLightHelper2 = new THREE.PointLightHelper(pointLight2, 0.1);
+  scene.add(pointLightHelper2);
 
   // Lighting GUI
   const directionalLightFolder = gui.addFolder("Directional Light");
@@ -112,6 +134,18 @@ export function createScene(options?: Options) {
     .add(pointLight.position, "z", -10, 10, 0.1)
     .onChange(() => pointLightHelper.update());
   pointLightFolder.add(pointLight, "intensity", 0, 10, 0.1);
+
+  const pointLightFolder2 = gui.addFolder("Point Light 2");
+  pointLightFolder2
+    .add(pointLight2.position, "x", -10, 10, 0.1)
+    .onChange(() => pointLightHelper2.update());
+  pointLightFolder2
+    .add(pointLight2.position, "y", -10, 10, 0.1)
+    .onChange(() => pointLightHelper2.update());
+  pointLightFolder2
+    .add(pointLight2.position, "z", -10, 10, 0.1)
+    .onChange(() => pointLightHelper2.update());
+  pointLightFolder2.add(pointLight2, "intensity", 0, 10, 0.1);
 
   const ambientLightFolder = gui.addFolder("Ambient Light");
   ambientLightFolder.add(ambientLight, "intensity", 0, 10, 0.1);

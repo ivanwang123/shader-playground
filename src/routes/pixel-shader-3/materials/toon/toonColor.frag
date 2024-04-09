@@ -7,6 +7,8 @@
 uniform float uGlossiness;
 uniform vec3 uColor;
 
+uniform bool hasPointLights;
+
 varying vec2 vUv;
 varying vec3 vNormal;
 varying vec3 vViewDir;
@@ -16,12 +18,17 @@ const float levels = 3.0;
 
 void main() {
   // Point shadow map
-  PointLightShadow pointShadow = pointLightShadows[0];
+  float pointShadowIntensity = 0.0;
+  if (hasPointLights) {
+    for (int i = 0; i < pointLightShadows.length(); i++) {
+      PointLightShadow pointShadow = pointLightShadows[i];
 
-  float pointShadowIntensity = getPointShadow(
-      pointShadowMap[0], pointShadow.shadowMapSize, pointShadow.shadowBias,
-      pointShadow.shadowRadius, vPointShadowCoord[0],
-      pointShadow.shadowCameraNear, pointShadow.shadowCameraFar);
+      pointShadowIntensity = getPointShadow(
+          pointShadowMap[i], pointShadow.shadowMapSize, pointShadow.shadowBias,
+          pointShadow.shadowRadius, vPointShadowCoord[i],
+          pointShadow.shadowCameraNear, pointShadow.shadowCameraFar);
+    }
+  }
 
   // Directional shadow map
   DirectionalLightShadow directionalShadow = directionalLightShadows[0];
