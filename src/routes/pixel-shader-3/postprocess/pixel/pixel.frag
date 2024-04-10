@@ -1,5 +1,5 @@
-#include <common>
-#include <lights_pars_begin>
+// #include <common>
+// #include <lights_pars_begin>
 
 uniform sampler2D tDiffuse;
 uniform sampler2D tDepth;

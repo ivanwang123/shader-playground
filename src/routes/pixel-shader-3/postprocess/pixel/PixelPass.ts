@@ -59,6 +59,7 @@ export default class PixelPass extends Pass {
         tNormal: { value: null },
         tGrassDiffuse: { value: null },
         tGrassDepth: { value: null },
+        // TODO: Get directional light direction
         uDirectionalLight: {
           value: new THREE.Vector3(5, 4, 3),
         },
@@ -79,23 +80,4 @@ export default class PixelPass extends Pass {
       },
     });
   }
-
-  // createRenderTarget(width: number, height: number, depthTexture: boolean) {
-  //   const renderTarget = new THREE.WebGLRenderTarget(
-  //     width,
-  //     height,
-  //     depthTexture
-  //       ? {
-  //           depthTexture: new THREE.DepthTexture(width, height),
-  //           depthBuffer: true,
-  //         }
-  //       : undefined
-  //   );
-  //   renderTarget.texture.format = THREE.RGBAFormat;
-  //   renderTarget.texture.minFilter = THREE.NearestFilter;
-  //   renderTarget.texture.magFilter = THREE.NearestFilter;
-  //   renderTarget.texture.generateMipmaps = false;
-  //   renderTarget.stencilBuffer = false;
-  //   return renderTarget;
-  // }
 }

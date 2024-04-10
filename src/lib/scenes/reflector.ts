@@ -1,10 +1,11 @@
 import * as THREE from "three";
+import { RenderedTextures } from "../../routes/pixel-shader-3/RenderedTextures";
 
 class Reflector extends THREE.Mesh {
   isReflector: boolean;
   type: string;
   camera: THREE.PerspectiveCamera;
-  getRenderTarget: () => void;
+  getRenderTarget: () => THREE.WebGLRenderTarget;
   dispose: () => void;
 
   static ReflectorShader: any;
@@ -50,14 +51,14 @@ class Reflector extends THREE.Mesh {
     const textureMatrix = new THREE.Matrix4();
     const virtualCamera = this.camera;
 
-    const renderTarget = new THREE.WebGLRenderTarget(
-      textureWidth,
-      textureHeight,
-      {
-        samples: multisample,
-        type: THREE.HalfFloatType,
-      }
-    );
+    // const renderTarget = new THREE.WebGLRenderTarget(
+    //   textureWidth,
+    //   textureHeight,
+    //   {
+    //     samples: multisample,
+    //     type: THREE.HalfFloatType,
+    //   }
+    // );
 
     const material = new THREE.ShaderMaterial({
       name: shader.name !== undefined ? shader.name : "unspecified",
@@ -66,13 +67,28 @@ class Reflector extends THREE.Mesh {
       vertexShader: shader.vertexShader,
     });
 
-    material.uniforms["tDiffuse"].value = renderTarget.texture;
+    // material.uniforms["tDiffuse"].value = renderTarget.texture;
     material.uniforms["color"].value = color;
     material.uniforms["textureMatrix"].value = textureMatrix;
 
     this.material = material;
 
+    let reflectorRenderedTextures: RenderedTextures | null = null;
+
     this.onBeforeRender = function (renderer, scene, camera) {
+      // texture.material.uniforms.tDiffuse.value =
+      //   reflectorRenderedTextures.diffuseDepthlessTexture;
+      // texture.material.uniforms.tDepth.value =
+      //   reflectorRenderedTextures.depthDepthlessTexture;
+
+      // texture.material.uniforms.tNormal.value =
+      //   reflectorRenderedTextures.normalDepthlessTexture;
+
+      // texture.material.uniforms.tGrassDiffuse.value =
+      //   reflectorRenderedTextures.diffuseTexture;
+      // texture.material.uniforms.tGrassDepth.value =
+      //   reflectorRenderedTextures.depthTexture;
+
       reflectorWorldPosition.setFromMatrixPosition(scope.matrixWorld);
       cameraWorldPosition.setFromMatrixPosition(camera.matrixWorld);
 
@@ -170,6 +186,32 @@ class Reflector extends THREE.Mesh {
       projectionMatrix.elements[10] = clipPlane.z + 1.0 - clipBias;
       projectionMatrix.elements[14] = clipPlane.w;
 
+      if (reflectorRenderedTextures === null) {
+        reflectorRenderedTextures = new RenderedTextures(
+          renderer,
+          scene,
+          virtualCamera,
+          new THREE.OrthographicCamera(),
+          new THREE.Vector2(window.innerWidth / 3, window.innerHeight / 3)
+        );
+      }
+
+      reflectorRenderedTextures.resetTextures();
+
+      material.uniforms["uInverseProjectionMatrix"].value =
+        virtualCamera.projectionMatrixInverse;
+      material.uniforms["uInverseViewMatrix"].value = virtualCamera.matrixWorld;
+
+      material.uniforms["tDiffuse"].value =
+        reflectorRenderedTextures.diffuseDepthlessTexture;
+      material.uniforms["tDepth"].value =
+        reflectorRenderedTextures.depthDepthlessTexture;
+      material.uniforms["tNormal"].value =
+        reflectorRenderedTextures.normalDepthlessTexture;
+      material.uniforms["tGrassDiffuse"].value =
+        reflectorRenderedTextures.diffuseTexture;
+      material.uniforms["tGrassDepth"].value =
+        reflectorRenderedTextures.depthTexture;
       // Render
       scope.visible = false;
 
@@ -227,62 +269,190 @@ Reflector.ReflectorShader = {
       value: null,
     },
 
-    tDiffuse: {
-      value: null,
-    },
+    // tDiffuse: {
+    //   value: null,
+    // },
 
     textureMatrix: {
       value: null,
+    },
+
+    tDiffuse: {
+      value: null,
+    },
+    tDepth: {
+      value: null,
+    },
+    tNormal: {
+      value: null,
+    },
+    tGrassDiffuse: {
+      value: null,
+    },
+    tGrassDepth: {
+      value: null,
+    },
+
+    uDirectionalLight: {
+      value: new THREE.Vector3(5, 4, 3),
+    },
+    uInverseProjectionMatrix: {
+      value: null,
+    },
+    uInverseViewMatrix: {
+      value: null,
+    },
+    uResolution: {
+      value: new THREE.Vector4(
+        window.innerWidth / 3,
+        window.innerHeight / 3,
+        3 / window.innerWidth,
+        3 / window.innerHeight
+      ),
     },
   },
 
   vertexShader: /* glsl */ `
 		uniform mat4 textureMatrix;
-		varying vec4 vUv;
+		// varying vec4 vUv;
+		varying vec2 vUv;
 
-		#include <common>
-		#include <logdepthbuf_pars_vertex>
+		// #include <common>
+		// #include <logdepthbuf_pars_vertex>
 
 		void main() {
 
-			vUv = textureMatrix * vec4( position, 1.0 );
+			// vUv = textureMatrix * vec4( position, 1.0 );
+			vUv = uv;
 
 			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 
-			#include <logdepthbuf_vertex>
+			// #include <logdepthbuf_vertex>
 
 		}`,
 
   fragmentShader: /* glsl */ `
-		uniform vec3 color;
-		uniform sampler2D tDiffuse;
-		varying vec4 vUv;
+	 // #include <common>
+// #include <lights_pars_begin>
 
-		#include <logdepthbuf_pars_fragment>
+uniform sampler2D tDiffuse;
+uniform sampler2D tDepth;
+uniform sampler2D tNormal;
+uniform sampler2D tGrassDiffuse;
+uniform sampler2D tGrassDepth;
 
-		float blendOverlay( float base, float blend ) {
+uniform vec3 uDirectionalLight;
+uniform mat4 uInverseViewMatrix;
+uniform mat4 uInverseProjectionMatrix;
+uniform vec4 uResolution;
 
-			return( base < 0.5 ? ( 2.0 * base * blend ) : ( 1.0 - 2.0 * ( 1.0 - base ) * ( 1.0 - blend ) ) );
+varying vec2 vUv;
 
-		}
+float getDepth(sampler2D depthTexture, vec2 uv) {
+  float depth = texture2D(depthTexture, uv).r;
+  vec3 ndc = vec3(uv * 2.0 - 1.0, depth);
+  vec4 view = uInverseProjectionMatrix * vec4(ndc, 1.0);
+  view.xyz /= view.w;
+  return -view.z;
+}
 
-		vec3 blendOverlay( vec3 base, vec3 blend ) {
+void main() {
+  float centerDepth = getDepth(tDepth, vUv);
+  vec3 centerNormal = texture2D(tNormal, vUv).xyz * 2.0 - 1.0;
 
-			return vec3( blendOverlay( base.r, blend.r ), blendOverlay( base.g, blend.g ), blendOverlay( base.b, blend.b ) );
+  vec2 uvs[4];
+  uvs[0] = vec2(vUv.x, vUv.y + uResolution.w);
+  uvs[1] = vec2(vUv.x, vUv.y - uResolution.w);
+  uvs[2] = vec2(vUv.x + uResolution.z, vUv.y);
+  uvs[3] = vec2(vUv.x - uResolution.z, vUv.y);
 
-		}
+  float depthDiff = 0.0;
+  float nearestDepth = centerDepth;
+  vec2 nearestUV = vUv;
 
-		void main() {
+  float normalSum = 0.0;
 
-			#include <logdepthbuf_fragment>
+  for (int i = 0; i < 4; i++) {
+    float offsetDepth = getDepth(tDepth, uvs[i]);
+    depthDiff += centerDepth - offsetDepth;
 
-			vec4 base = texture2DProj( tDiffuse, vUv );
-			gl_FragColor = vec4( blendOverlay( base.rgb, color ), 1.0 );
+    if (offsetDepth < nearestDepth) {
+      nearestDepth = offsetDepth;
+      nearestUV = uvs[i];
+    }
 
-			#include <tonemapping_fragment>
-			#include <colorspace_fragment>
+    vec3 offsetNormal = texture2D(tNormal, uvs[i]).xyz * 2.0 - 1.0;
+    vec3 normalDiff = centerNormal - offsetNormal;
 
-		}`,
+    vec3 normalEdgeBias = vec3(1.0, 1.0, 1.0);
+    float normalBiasDiff = dot(normalDiff, normalEdgeBias);
+    float normalIndicator = smoothstep(-0.01, 0.01, normalBiasDiff);
+
+    normalSum += dot(normalDiff, normalDiff) * normalIndicator;
+  }
+
+  float depthThreshold = 0.05;
+  float depthEdge = step(depthThreshold, depthDiff);
+
+  float darkenAmount = 0.3;
+  float lightenAmount = 1.5;
+
+  float normalThreshold = 0.6;
+  float indicator = sqrt(normalSum);
+  float normalEdge = step(normalThreshold, indicator);
+
+  vec3 texel = texture2D(tDiffuse, vUv).rgb;
+  vec3 edgeTexel = texture2D(tDiffuse, nearestUV).rgb;
+
+  mat3 viewToWorldNormalMat =
+      mat3(uInverseViewMatrix[0].xyz, uInverseViewMatrix[1].xyz,
+           uInverseViewMatrix[2].xyz);
+  float ld =
+      dot((viewToWorldNormalMat * centerNormal), -normalize(uDirectionalLight));
+
+  vec3 edgeMix;
+  if ((getDepth(tGrassDepth, nearestUV) + 0.01) < nearestDepth) {
+    edgeMix = texture2D(tGrassDiffuse, nearestUV).rgb;
+  } else if (depthEdge > 0.0) {
+    edgeMix = mix(texel, edgeTexel * darkenAmount, depthEdge);
+  } else {
+    edgeMix = mix(texel, texel * (ld > 0.0 ? darkenAmount : lightenAmount),
+                  normalEdge);
+  }
+
+  gl_FragColor = vec4(vec3(1.0), 1.0);
+}
+
+		// uniform vec3 color;
+		// uniform sampler2D tDiffuse;
+		// varying vec4 vUv;
+
+		// #include <logdepthbuf_pars_fragment>
+
+		// float blendOverlay( float base, float blend ) {
+
+		// 	return( base < 0.5 ? ( 2.0 * base * blend ) : ( 1.0 - 2.0 * ( 1.0 - base ) * ( 1.0 - blend ) ) );
+
+		// }
+
+		// vec3 blendOverlay( vec3 base, vec3 blend ) {
+
+		// 	return vec3( blendOverlay( base.r, blend.r ), blendOverlay( base.g, blend.g ), blendOverlay( base.b, blend.b ) );
+
+		// }
+
+		// void main() {
+
+		// 	#include <logdepthbuf_fragment>
+
+		// 	vec4 base = texture2DProj( tDiffuse, vUv );
+		// 	gl_FragColor = vec4( blendOverlay( base.rgb, color ), 1.0 );
+
+		// 	#include <tonemapping_fragment>
+		// 	#include <colorspace_fragment>
+
+		// }
+		`,
 };
 
 export { Reflector };

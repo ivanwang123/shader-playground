@@ -22,6 +22,7 @@
   import { DEPTHLESS_LAYER } from "./constants";
   import { PixelPass2 } from "./postprocess/pixel/PixelPass2";
   import { RenderedTextures } from "./RenderedTextures";
+  import { Reflector } from "$lib/scenes/reflector";
 
   let canvas: HTMLCanvasElement;
 
@@ -61,8 +62,27 @@
   // const grass = addGrass(topdownCamera);
   // scene.add(grass);
 
-  const texture = addTexture(resolution);
+  const texture = addTexture(resolution, camera);
   scene.add(texture);
+
+  const reflectorGeometry = new THREE.PlaneGeometry(10, 10);
+  const reflectorMaterial = new THREE.MeshBasicMaterial();
+  const reflectorMesh = new THREE.Mesh(reflectorGeometry, reflectorMaterial);
+  reflectorMesh.position.set(0, 5, -8);
+
+  const reflector = new Reflector(reflectorGeometry);
+  reflector.position.set(0, 5, -7);
+  scene.add(reflector);
+
+  const reflectorCamera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+  reflectorCamera.position.set(0, 5, -8);
+  reflectorCamera.layers.enableAll();
+  reflectorCamera.lookAt(new THREE.Vector3(0, 0, 0));
 
   onMount(() => {
     // Renderer
@@ -84,6 +104,14 @@
       resolution
     );
 
+    const reflectorRenderedTextures = new RenderedTextures(
+      renderer,
+      scene,
+      reflectorCamera,
+      topdownCamera,
+      resolution
+    );
+
     // Composer
     const composer = new EffectComposer(renderer);
     composer.setSize(window.innerWidth, window.innerHeight);
@@ -91,6 +119,7 @@
     const pixelPass = new PixelPass(resolution, camera, renderedTextures);
     const pixelPass2 = new PixelPass2(resolution, scene, camera);
 
+    composer.addPass(new RenderPass(scene, camera));
     composer.addPass(pixelPass);
     // composer.addPass(pixelPass2);
     // composer.addPass(new RenderPass(scene, camera));
@@ -109,6 +138,7 @@
 
       // Reset textures
       renderedTextures.resetTextures();
+      reflectorRenderedTextures.resetTextures();
 
       // Set uniforms
       water.material.uniforms.uTime.value = elapsedTime;
@@ -120,8 +150,19 @@
       water.material.uniforms.tDepth.value =
         renderedTextures.depthDepthlessTexture;
 
-      texture.material.uniforms.tTexture.value =
-        renderedTextures.depthDepthlessTexture;
+      // texture.material.uniforms.tTexture.value = renderedTextures.depthTexture;
+      texture.material.uniforms.tDiffuse.value =
+        reflectorRenderedTextures.diffuseDepthlessTexture;
+      texture.material.uniforms.tDepth.value =
+        reflectorRenderedTextures.depthDepthlessTexture;
+
+      texture.material.uniforms.tNormal.value =
+        reflectorRenderedTextures.normalDepthlessTexture;
+
+      texture.material.uniforms.tGrassDiffuse.value =
+        reflectorRenderedTextures.diffuseTexture;
+      texture.material.uniforms.tGrassDepth.value =
+        reflectorRenderedTextures.depthTexture;
 
       composer.render();
     };
