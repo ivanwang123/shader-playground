@@ -47,7 +47,7 @@
   const ground = addGround();
   scene.add(ground);
 
-  const cube = addCube();
+  const cube = addCube({ position: new THREE.Vector3(1, 0.9, 1) });
   scene.add(cube);
 
   const sphere = addSphere({ position: new THREE.Vector3(2.5, 0.5, 1) });
@@ -67,24 +67,25 @@
 
   const reflectorGeometry = new THREE.PlaneGeometry(10, 10);
 
-  const reflector = new Reflector(reflectorGeometry);
-  reflector.position.set(0, 5, -7);
-  scene.add(reflector);
+  // const reflector = new Reflector(reflectorGeometry);
+  // reflector.position.set(7, 5, 0);
+  // reflector.rotation.y = THREE.MathUtils.degToRad(-90);
+  // scene.add(reflector);
 
   // const reflector2 = new Reflector(reflectorGeometry);
-  // reflector2.position.set(7, 5, 0);
-  // reflector2.rotation.y = THREE.MathUtils.degToRad(-90);
+  // reflector2.position.set(0, 0.5, 0);
+  // reflector2.rotation.x = THREE.MathUtils.degToRad(-90);
   // scene.add(reflector2);
 
-  const reflectorCamera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
-  reflectorCamera.position.set(0, 5, -8);
-  reflectorCamera.layers.enableAll();
-  reflectorCamera.lookAt(new THREE.Vector3(0, 0, 0));
+  // const reflectorCamera = new THREE.PerspectiveCamera(
+  //   75,
+  //   window.innerWidth / window.innerHeight,
+  //   0.1,
+  //   1000
+  // );
+  // reflectorCamera.position.set(0, 5, -8);
+  // reflectorCamera.layers.enableAll();
+  // reflectorCamera.lookAt(new THREE.Vector3(0, 0, 0));
 
   onMount(() => {
     // Renderer
@@ -106,13 +107,13 @@
       resolution
     );
 
-    const reflectorRenderedTextures = new RenderedTextures(
-      renderer,
-      scene,
-      reflectorCamera,
-      topdownCamera,
-      resolution
-    );
+    // const reflectorRenderedTextures = new RenderedTextures(
+    //   renderer,
+    //   scene,
+    //   reflectorCamera,
+    //   topdownCamera,
+    //   resolution
+    // );
 
     // Composer
     const composer = new EffectComposer(renderer);
@@ -131,6 +132,13 @@
     // Controls
     new OrbitControls(camera, renderer.domElement);
 
+    // const renderTarget = new THREE.WebGLRenderTarget(512, 512);
+    // renderTarget.texture.format = THREE.RGBAFormat;
+    // renderTarget.texture.minFilter = THREE.NearestFilter;
+    // renderTarget.texture.magFilter = THREE.NearestFilter;
+    // renderTarget.texture.generateMipmaps = false;
+    // renderTarget.stencilBuffer = false;
+
     // Animate
     const animate = () => {
       requestAnimationFrame(animate);
@@ -140,31 +148,24 @@
 
       // Reset textures
       renderedTextures.resetTextures();
-      reflectorRenderedTextures.resetTextures();
+      // reflectorRenderedTextures.resetTextures();
 
       // Set uniforms
       water.material.uniforms.uTime.value = elapsedTime;
       // waterfall.material.uniforms.uTime.value = elapsedTime;
       // grass.material.uniforms.uTime.value = elapsedTime;
 
-      water.material.uniforms.tDiffuse.value =
+      water.material.uniforms.tRealDiffuse.value =
         renderedTextures.diffuseDepthlessTexture;
-      water.material.uniforms.tDepth.value =
+      water.material.uniforms.tRealDepth.value =
         renderedTextures.depthDepthlessTexture;
 
-      // texture.material.uniforms.tTexture.value = renderedTextures.depthTexture;
-      texture.material.uniforms.tDiffuse.value =
-        reflectorRenderedTextures.diffuseDepthlessTexture;
-      texture.material.uniforms.tDepth.value =
-        reflectorRenderedTextures.depthDepthlessTexture;
+      // renderer.setRenderTarget(renderTarget);
+      // renderer.render(reflector, new THREE.Camera());
 
-      texture.material.uniforms.tNormal.value =
-        reflectorRenderedTextures.normalDepthlessTexture;
-
-      texture.material.uniforms.tGrassDiffuse.value =
-        reflectorRenderedTextures.diffuseTexture;
-      texture.material.uniforms.tGrassDepth.value =
-        reflectorRenderedTextures.depthTexture;
+      // texture.material.uniforms.uTextureMatrix.value = reflector.textureMatrix;
+      // console.log("TEXTUREMATRIX", reflector.textureMatrix);
+      // texture.material.uniforms.tTexture.value = reflector.renderTarget.texture;
 
       composer.render();
     };

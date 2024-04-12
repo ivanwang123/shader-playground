@@ -4,6 +4,9 @@ import reflectorVert from "./reflector.vert";
 import reflectorFrag from "./reflector.frag";
 
 class Reflector extends THREE.Mesh {
+  renderTarget: THREE.WebGLRenderTarget;
+  textureMatrix: THREE.Matrix4;
+
   constructor(geometry: THREE.BufferGeometry<THREE.NormalBufferAttributes>) {
     super(geometry);
 
@@ -30,7 +33,7 @@ class Reflector extends THREE.Mesh {
     const target = new THREE.Vector3();
     const q = new THREE.Vector4();
 
-    const textureMatrix = new THREE.Matrix4();
+    this.textureMatrix = new THREE.Matrix4();
     const virtualCamera = new THREE.PerspectiveCamera();
     virtualCamera.layers.enableAll();
 
@@ -68,12 +71,19 @@ class Reflector extends THREE.Mesh {
       fragmentShader: reflectorFrag,
     });
 
-    material.uniforms["uTextureMatrix"].value = textureMatrix;
+    material.uniforms["uTextureMatrix"].value = this.textureMatrix;
     material.uniforms["uInverseViewMatrix"].value = virtualCamera.matrixWorld;
 
     this.material = material;
 
     let reflectorRenderedTextures: RenderedTextures | null = null;
+
+    this.renderTarget = new THREE.WebGLRenderTarget(512, 512);
+    this.renderTarget.texture.format = THREE.RGBAFormat;
+    this.renderTarget.texture.minFilter = THREE.NearestFilter;
+    this.renderTarget.texture.magFilter = THREE.NearestFilter;
+    this.renderTarget.texture.generateMipmaps = false;
+    this.renderTarget.stencilBuffer = false;
 
     this.onBeforeRender = function (renderer, scene, camera) {
       reflectorWorldPosition.setFromMatrixPosition(scope.matrixWorld);
@@ -114,7 +124,7 @@ class Reflector extends THREE.Mesh {
       virtualCamera.projectionMatrix.copy(camera.projectionMatrix);
 
       // Update the texture matrix
-      textureMatrix.set(
+      scope.textureMatrix.set(
         0.5,
         0.0,
         0.0,
@@ -132,9 +142,9 @@ class Reflector extends THREE.Mesh {
         0.0,
         1.0
       );
-      textureMatrix.multiply(virtualCamera.projectionMatrix);
-      textureMatrix.multiply(virtualCamera.matrixWorldInverse);
-      textureMatrix.multiply(scope.matrixWorld);
+      scope.textureMatrix.multiply(virtualCamera.projectionMatrix);
+      scope.textureMatrix.multiply(virtualCamera.matrixWorldInverse);
+      scope.textureMatrix.multiply(scope.matrixWorld);
 
       // Now update projection matrix with new clip plane, implementing code from: http://www.terathon.com/code/oblique.html
       // Paper explaining this technique: http://www.terathon.com/lengyel/Lengyel-Oblique.pdf
@@ -208,6 +218,9 @@ class Reflector extends THREE.Mesh {
 
       renderer.xr.enabled = currentXrEnabled;
       renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;
+
+      renderer.setRenderTarget(scope.renderTarget);
+      renderer.render(scene, virtualCamera);
 
       renderer.setRenderTarget(currentRenderTarget);
 
