@@ -22,7 +22,7 @@
   import { DEPTHLESS_LAYER } from "./constants";
   import { PixelPass2 } from "./postprocess/pixel/PixelPass2";
   import { RenderedTextures } from "./RenderedTextures";
-  import { Reflector } from "$lib/scenes/reflector";
+  import { Reflector } from "./models/reflector/reflector";
 
   let canvas: HTMLCanvasElement;
 
@@ -63,16 +63,18 @@
   // scene.add(grass);
 
   const texture = addTexture(resolution, camera);
-  scene.add(texture);
+  // scene.add(texture);
 
   const reflectorGeometry = new THREE.PlaneGeometry(10, 10);
-  const reflectorMaterial = new THREE.MeshBasicMaterial();
-  const reflectorMesh = new THREE.Mesh(reflectorGeometry, reflectorMaterial);
-  reflectorMesh.position.set(0, 5, -8);
 
   const reflector = new Reflector(reflectorGeometry);
   reflector.position.set(0, 5, -7);
   scene.add(reflector);
+
+  // const reflector2 = new Reflector(reflectorGeometry);
+  // reflector2.position.set(7, 5, 0);
+  // reflector2.rotation.y = THREE.MathUtils.degToRad(-90);
+  // scene.add(reflector2);
 
   const reflectorCamera = new THREE.PerspectiveCamera(
     75,
@@ -119,7 +121,7 @@
     const pixelPass = new PixelPass(resolution, camera, renderedTextures);
     const pixelPass2 = new PixelPass2(resolution, scene, camera);
 
-    composer.addPass(new RenderPass(scene, camera));
+    // composer.addPass(new RenderPass(scene, camera));
     composer.addPass(pixelPass);
     // composer.addPass(pixelPass2);
     // composer.addPass(new RenderPass(scene, camera));
