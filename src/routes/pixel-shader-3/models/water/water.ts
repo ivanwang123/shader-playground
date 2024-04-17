@@ -49,19 +49,15 @@ export function addWater(camera: THREE.Camera) {
       tRealDiffuse: { value: null },
       tRealDepth: { value: null },
       tDisplacement: { value: displacementTexture },
-      uNear: { value: (camera as THREE.PerspectiveCamera).near },
-      uFar: { value: (camera as THREE.PerspectiveCamera).far },
-      uTime: { value: 0 },
-      uDisplacementAmount: { value: 0.2 },
-      // uResolution: {
-      //   value: new THREE.Vector2(window.innerWidth / 3, window.innerHeight / 3),
-      // },
       tDiffuse: { value: null },
       tDepth: { value: null },
       tNormal: { value: null },
       tGrassDiffuse: { value: null },
       tGrassDepth: { value: null },
-
+      uNear: { value: (camera as THREE.PerspectiveCamera).near },
+      uFar: { value: (camera as THREE.PerspectiveCamera).far },
+      uTime: { value: 0 },
+      uDisplacementAmount: { value: 0.2 },
       uDirectionalLight: {
         value: new THREE.Vector3(5, 4, 3),
       },
@@ -72,22 +68,21 @@ export function addWater(camera: THREE.Camera) {
       },
     },
   });
-  const waterGeometry = new THREE.PlaneGeometry(5, 5);
+  const waterGeometry = new THREE.PlaneGeometry(5, 5, 20, 20);
 
   const water = new THREE.Mesh(waterGeometry, waterMaterial);
   water.layers.set(DEPTHLESS_LAYER);
   water.rotation.x = -(Math.PI * 90) / 180;
 
-  // water.attach(wall1);
-  // water.attach(wall2);
-  // water.attach(wall3);
-  // water.attach(wall4);
-  // water.attach(floor);
+  water.attach(wall1);
+  water.attach(wall2);
+  water.attach(wall3);
+  water.attach(wall4);
+  water.attach(floor);
   water.position.set(7.5, 0.5, 0);
   water.position.set(0, 0.5, 0);
 
-  //
-
+  // Reflection
   const clipBias = 0;
 
   const reflectorPlane = new THREE.Plane();
@@ -241,9 +236,6 @@ export function addWater(camera: THREE.Camera) {
       reflectorRenderedTextures.diffuseTexture;
     waterMaterial.uniforms["tGrassDepth"].value =
       reflectorRenderedTextures.depthTexture;
-    waterMaterial.uniforms["uTextureMatrix"].value = textureMatrix;
-    waterMaterial.uniforms["uInverseViewMatrix"].value =
-      virtualCamera.matrixWorld;
 
     renderer.xr.enabled = currentXrEnabled;
     renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;

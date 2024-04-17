@@ -1,11 +1,12 @@
-import { FullScreenQuad, Pass } from "three/examples/jsm/Addons.js";
+// import { FullScreenQuad, Pass } from "three/examples/jsm/Addons.js";
 import * as THREE from "three";
 
 import pixelVert from "./pixel.vert";
 import pixelFrag from "./pixel.frag";
 import type { RenderedTextures } from "../../RenderedTextures";
+import { FullScreenQuad, Pass } from "three/examples/jsm/Addons.js";
 
-export default class PixelPass extends Pass {
+export class PixelPass extends Pass {
   resolution: THREE.Vector2;
   camera: THREE.Camera;
   renderedTextures: RenderedTextures;
@@ -24,7 +25,11 @@ export default class PixelPass extends Pass {
     this.fsQuad = new FullScreenQuad(this.material());
   }
 
-  render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget) {
+  render(
+    renderer: THREE.WebGLRenderer,
+    writeBuffer: THREE.WebGLRenderTarget,
+    readBuffer: THREE.WebGLRenderTarget
+  ) {
     const uniforms = (this.fsQuad.material as THREE.ShaderMaterial).uniforms;
 
     uniforms.tDiffuse.value = this.renderedTextures.diffuseDepthlessTexture;
@@ -39,8 +44,8 @@ export default class PixelPass extends Pass {
       renderer.setRenderTarget(null);
     } else {
       renderer.setRenderTarget(writeBuffer);
-      // writeBuffer.depthTexture = this.normalRenderTarget.depthTexture;
-      // writeBuffer.depthBuffer = true;
+      writeBuffer.depthTexture = readBuffer.texture as THREE.DepthTexture;
+      writeBuffer.depthBuffer = true;
       if (this.clear) {
         renderer.clear();
       }

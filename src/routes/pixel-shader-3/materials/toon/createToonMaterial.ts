@@ -36,7 +36,7 @@ export function createToonMaterial(texture: THREE.Texture | THREE.Color) {
 
   const toonMaterial = new THREE.ShaderMaterial({
     vertexShader: toonVert,
-    fragmentShader: ``,
+    fragmentShader: "",
     uniforms,
     lights: true,
   });

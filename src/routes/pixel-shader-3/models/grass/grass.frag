@@ -10,6 +10,5 @@ void main() {
 
   vec3 groundTexel = texture2D(tGround, groundUV).rgb;
 
-  // purple panda
   gl_FragColor = vec4(groundTexel, 1.0);
 }

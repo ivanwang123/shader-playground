@@ -13,16 +13,21 @@
   import {
     EffectComposer,
     GammaCorrectionShader,
+    GodRaysDepthMaskShader,
     OrbitControls,
     RenderPass,
     ShaderPass,
   } from "three/examples/jsm/Addons.js";
-  import PixelPass from "./postprocess/pixel/PixelPass";
+  import { PixelPass } from "./postprocess/pixel/PixelPass";
+  import { GodrayPass1 } from "./postprocess/godray/GodrayPass1";
+  import { GodrayPass2 } from "./postprocess/godray/GodrayPass2";
   import { addWater } from "./models/water/water";
   import { DEPTHLESS_LAYER } from "./constants";
   import { PixelPass2 } from "./postprocess/pixel/PixelPass2";
   import { RenderedTextures } from "./RenderedTextures";
   import { Reflector } from "./models/reflector/reflector";
+  import { DisplayPass } from "./postprocess/display/DisplayPass";
+  import { GodrayPass0 } from "./postprocess/godray/GodrayPass0";
 
   let canvas: HTMLCanvasElement;
 
@@ -59,7 +64,7 @@
   // const waterfall = addWaterfall({ position: new THREE.Vector3(-3, 5, 0) });
   // scene.add(waterfall);
 
-  // const grass = addGrass(topdownCamera);
+  const grass = addGrass(topdownCamera);
   // scene.add(grass);
 
   const texture = addTexture(resolution, camera);
@@ -71,21 +76,6 @@
   // reflector.position.set(7, 5, 0);
   // reflector.rotation.y = THREE.MathUtils.degToRad(-90);
   // scene.add(reflector);
-
-  // const reflector2 = new Reflector(reflectorGeometry);
-  // reflector2.position.set(0, 0.5, 0);
-  // reflector2.rotation.x = THREE.MathUtils.degToRad(-90);
-  // scene.add(reflector2);
-
-  // const reflectorCamera = new THREE.PerspectiveCamera(
-  //   75,
-  //   window.innerWidth / window.innerHeight,
-  //   0.1,
-  //   1000
-  // );
-  // reflectorCamera.position.set(0, 5, -8);
-  // reflectorCamera.layers.enableAll();
-  // reflectorCamera.lookAt(new THREE.Vector3(0, 0, 0));
 
   onMount(() => {
     // Renderer
@@ -107,14 +97,6 @@
       resolution
     );
 
-    // const reflectorRenderedTextures = new RenderedTextures(
-    //   renderer,
-    //   scene,
-    //   reflectorCamera,
-    //   topdownCamera,
-    //   resolution
-    // );
-
     // Composer
     const composer = new EffectComposer(renderer);
     composer.setSize(window.innerWidth, window.innerHeight);
@@ -122,22 +104,18 @@
     const pixelPass = new PixelPass(resolution, camera, renderedTextures);
     const pixelPass2 = new PixelPass2(resolution, scene, camera);
 
-    // composer.addPass(new RenderPass(scene, camera));
+    // composer.addPass(new GodrayPass0(resolution, camera, renderedTextures));
+    // composer.addPass(new GodrayPass1(resolution, camera, renderedTextures));
+    // composer.addPass(new DisplayPass(resolution, camera, renderedTextures));
     composer.addPass(pixelPass);
+    // composer.addPass(new GodrayPass2(resolution, camera, renderedTextures));
+
     // composer.addPass(pixelPass2);
-    // composer.addPass(new RenderPass(scene, camera));
 
     composer.addPass(new ShaderPass(GammaCorrectionShader));
 
     // Controls
     new OrbitControls(camera, renderer.domElement);
-
-    // const renderTarget = new THREE.WebGLRenderTarget(512, 512);
-    // renderTarget.texture.format = THREE.RGBAFormat;
-    // renderTarget.texture.minFilter = THREE.NearestFilter;
-    // renderTarget.texture.magFilter = THREE.NearestFilter;
-    // renderTarget.texture.generateMipmaps = false;
-    // renderTarget.stencilBuffer = false;
 
     // Animate
     const animate = () => {
@@ -148,24 +126,24 @@
 
       // Reset textures
       renderedTextures.resetTextures();
-      // reflectorRenderedTextures.resetTextures();
 
       // Set uniforms
-      water.material.uniforms.uTime.value = elapsedTime;
-      // waterfall.material.uniforms.uTime.value = elapsedTime;
-      // grass.material.uniforms.uTime.value = elapsedTime;
 
+      grass.material.uniforms.uTime.value = elapsedTime;
+      grass.material.uniforms.tGround.value =
+        renderedTextures.groundDiffuseTexture;
+      grass.material.uniforms.tGroundDepth.value =
+        renderedTextures.groundDepthTexture;
+
+      water.material.uniforms.uTime.value = elapsedTime;
       water.material.uniforms.tRealDiffuse.value =
         renderedTextures.diffuseDepthlessTexture;
       water.material.uniforms.tRealDepth.value =
         renderedTextures.depthDepthlessTexture;
 
-      // renderer.setRenderTarget(renderTarget);
-      // renderer.render(reflector, new THREE.Camera());
-
-      // texture.material.uniforms.uTextureMatrix.value = reflector.textureMatrix;
-      // console.log("TEXTUREMATRIX", reflector.textureMatrix);
       // texture.material.uniforms.tTexture.value = reflector.renderTarget.texture;
+
+      // waterfall.material.uniforms.uTime.value = elapsedTime;
 
       composer.render();
     };

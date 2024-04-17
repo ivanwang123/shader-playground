@@ -4,7 +4,6 @@ import reflectorVert from "./reflector.vert";
 import reflectorFrag from "./reflector.frag";
 
 class Reflector extends THREE.Mesh {
-  renderTarget: THREE.WebGLRenderTarget;
   textureMatrix: THREE.Matrix4;
 
   constructor(geometry: THREE.BufferGeometry<THREE.NormalBufferAttributes>) {
@@ -77,13 +76,6 @@ class Reflector extends THREE.Mesh {
     this.material = material;
 
     let reflectorRenderedTextures: RenderedTextures | null = null;
-
-    this.renderTarget = new THREE.WebGLRenderTarget(512, 512);
-    this.renderTarget.texture.format = THREE.RGBAFormat;
-    this.renderTarget.texture.minFilter = THREE.NearestFilter;
-    this.renderTarget.texture.magFilter = THREE.NearestFilter;
-    this.renderTarget.texture.generateMipmaps = false;
-    this.renderTarget.stencilBuffer = false;
 
     this.onBeforeRender = function (renderer, scene, camera) {
       reflectorWorldPosition.setFromMatrixPosition(scope.matrixWorld);
@@ -218,9 +210,6 @@ class Reflector extends THREE.Mesh {
 
       renderer.xr.enabled = currentXrEnabled;
       renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;
-
-      renderer.setRenderTarget(scope.renderTarget);
-      renderer.render(scene, virtualCamera);
 
       renderer.setRenderTarget(currentRenderTarget);
 

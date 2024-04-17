@@ -1,35 +1,39 @@
 # Features
 
-- [ ] Water (Transparency, distortion, reflection, depth, edge foam)
-- [ ] Trees
-- [ ] Wind (grass, water)
-- [ ] Lights (spotlight, rect-light, godrays, bloom)
-- [ ] Fire
-- [ ] Rain
-- [ ] Day/night cycle
+- [-] Water
+  - [x] Transparency
+  - [x] Distortion
+  - [x] Edge foam
+  - [x] Reflection
+  - [x] Waves
+  - [ ] Dynamic lighting
+- [-] Grass
+  - [x] Color and shadow
+  - [x] Dynamic lighting
+  - [x] Wind movement
+  - [ ] Spawn on grass terrain only
+- [-] Lights
+  - [x] Directional light
+  - [x] Point light
+  - [ ] Spot light
+  - [ ] Area light
+  - [ ] Godray
+  - [ ] Bloom
+- [ ] Weather and elements
+  - [ ] Fire
+  - [ ] Rain
+  - [ ] Particles
+  - [ ] Day/night cycle
+- [ ] Structures
+  - [ ] Tree
 
 # Bugs
 
 - [ ] Multiple lights and colors do not mix correctly
 - [ ] Pixel pass uses hard coded light direction
+  - [ ] Reflection shader normal edge detection is not correct
 - [ ] Water does not react to lighting
-
-# Fishing Game
-
-- [ ] Terrain
-  - [ ] Forest
-  - [ ] Cliff
-  - [ ] Waterfall
-  - [ ] Water
-  - [ ] Grass
-  - [ ] Fire
-- [ ] Features
-  - [ ] Day/night cycle
-  - [ ] Weather
-- [ ] Models
-  - [ ] Player
-  - [ ] Fish varities
-  - [ ] Cabin
+- [ ] Prevent grass from spawning in water
 
 # Resources
 

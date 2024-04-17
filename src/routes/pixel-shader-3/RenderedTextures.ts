@@ -72,7 +72,7 @@ export class RenderedTextures {
     if (this._depthTexture === null) {
       this.renderDiffuseAndDepth();
     }
-    return this._depthTexture as THREE.Texture;
+    return this._depthTexture as THREE.DepthTexture;
   }
 
   get diffuseDepthlessTexture() {
