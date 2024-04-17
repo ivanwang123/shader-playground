@@ -39,9 +39,9 @@ export function addGrass(topdownCamera: THREE.Camera) {
   const dummyGrass = new THREE.Object3D();
   for (let i = 0; i < instanceCount; i++) {
     dummyGrass.position.set(
-      (Math.random() - 0.5) * 10,
+      (Math.random() - 0.5) * 8,
       0,
-      (Math.random() - 0.5) * 10
+      (Math.random() - 0.5) * 8
     );
     dummyGrass.scale.setScalar(0.5 + Math.random() * 0.5);
     dummyGrass.rotation.y = (Math.random() * Math.PI) / 5;

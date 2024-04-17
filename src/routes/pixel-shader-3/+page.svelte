@@ -52,14 +52,18 @@
   const ground = addGround();
   scene.add(ground);
 
-  const cube = addCube({ position: new THREE.Vector3(1, 0.9, 1) });
+  const cube = addCube({ position: new THREE.Vector3(1, 0.5, 1) });
   scene.add(cube);
+
+  const cube2 = addCube({ position: new THREE.Vector3(0, 0.8, 6) });
+  scene.add(cube2);
 
   const sphere = addSphere({ position: new THREE.Vector3(2.5, 0.5, 1) });
   scene.add(sphere);
 
   const water = addWater(camera);
   scene.add(water);
+  // water.position.z = 6;
 
   // const waterfall = addWaterfall({ position: new THREE.Vector3(-3, 5, 0) });
   // scene.add(waterfall);

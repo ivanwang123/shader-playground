@@ -46,6 +46,7 @@ export function addWater(camera: THREE.Camera) {
     vertexShader: waterVert,
     fragmentShader: waterFrag,
     uniforms: {
+      ...THREE.UniformsLib.lights,
       tRealDiffuse: { value: null },
       tRealDepth: { value: null },
       tDisplacement: { value: displacementTexture },
@@ -66,7 +67,9 @@ export function addWater(camera: THREE.Camera) {
       uResolution: {
         value: resolution,
       },
+      uGlossiness: { value: 5 },
     },
+    lights: true,
   });
   const waterGeometry = new THREE.PlaneGeometry(5, 5, 20, 20);
 
@@ -79,7 +82,6 @@ export function addWater(camera: THREE.Camera) {
   water.attach(wall3);
   water.attach(wall4);
   water.attach(floor);
-  water.position.set(7.5, 0.5, 0);
   water.position.set(0, 0.5, 0);
 
   // Reflection

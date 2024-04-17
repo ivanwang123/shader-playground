@@ -1,7 +1,5 @@
 import * as THREE from "three";
 
-import lightsParsBeginOverride from "./lights_pars_begin_override.glsl";
-import shadowmapParsFragmentOverride from "./shadowmap_pars_fragment_override.glsl";
 import toonVert from "./toon.vert";
 import toonTextureFrag from "./toonTexture.frag";
 import toonColorFrag from "./toonColor.frag";
@@ -17,11 +15,8 @@ export function createToonMaterial(texture: THREE.Texture | THREE.Color) {
   let uniforms: { [uniform: string]: THREE.IUniform<any> } = {
     ...THREE.UniformsLib.lights,
     uGlossiness: { value: 5 },
-    // hasPointLights: {
-    //   value: THREE.UniformsLib.lights.pointLights.value.length > 0,
-    // },
   };
-  // console.log(uniforms.pointlights);
+  console.log(uniforms);
 
   // THREE.ShaderChunk.lights_pars_begin = lightsParsBeginOverride;
   // THREE.ShaderChunk.shadowmap_pars_fragment = shadowmapParsFragmentOverride;
@@ -125,8 +120,6 @@ function generateFragmentShader(
 		uniform float uGlossiness;
 		uniform vec3 uColor;
 
-		uniform bool hasPointLights;
-
 		varying vec2 vUv;
 		varying vec3 vNormal;
 		varying vec3 vViewDir;
@@ -142,9 +135,11 @@ function generateFragmentShader(
 	`;
 
   const remaining = `
-			gl_FragColor = vec4(uColor * (ambientLightColor + directionalLight +
-																		pointLight + specular + rim),
-													1.0);
+			// gl_FragColor = vec4(uColor * (ambientLightColor + directionalLight +
+			// 															pointLight + specular + rim),
+			// 										1.0);
+
+			gl_FragColor = vec4(uColor * (ambientLightColor / 10.0 + directionalLight + pointLight + specular + rim), 1.0);
 		}
 	`;
 

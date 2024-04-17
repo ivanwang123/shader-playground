@@ -11,7 +11,7 @@ export function addGround(options?: Options) {
   // const groundMaterial = new THREE.MeshStandardMaterial({
   //   color: options?.color || 0xceb1be,
   // });
-  const groundMaterial = createToonMaterial(new THREE.Color(0xceb1be));
+  const groundMaterial = createToonMaterial(new THREE.Color(0xffffff));
 
   const ground = new THREE.Mesh<any, any, any>(groundGeometry, groundMaterial);
   if (options?.position) {
