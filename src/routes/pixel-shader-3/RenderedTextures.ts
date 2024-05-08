@@ -27,7 +27,7 @@ export class RenderedTextures {
     scene: THREE.Scene,
     camera: THREE.PerspectiveCamera,
     topdownCamera: THREE.OrthographicCamera,
-    resolution: THREE.Vector2
+    resolution: THREE.Vector2,
   ) {
     this.renderer = renderer;
     this.scene = scene;
@@ -37,25 +37,25 @@ export class RenderedTextures {
     this.diffuseAndDepthRenderTarget = this.createRenderTarget(
       resolution.x,
       resolution.y,
-      true
+      true,
     );
 
     this.diffuseAndDepthDepthlessRenderTarget = this.createRenderTarget(
       resolution.x,
       resolution.y,
-      true
+      true,
     );
 
     this.normalDepthlessRenderTarget = this.createRenderTarget(
       resolution.x,
       resolution.y,
-      true
+      true,
     );
 
     this.groundAndDepthRenderTarget = this.createRenderTarget(
       resolution.x,
       resolution.y,
-      true
+      true,
     );
 
     this.normalMaterial = new THREE.MeshNormalMaterial();
@@ -156,22 +156,37 @@ export class RenderedTextures {
     const groundLayer = new THREE.Layers();
     groundLayer.set(GROUND_LAYER);
 
-    this.scene.children.forEach((child) => {
-      if (child instanceof THREE.Mesh && !child.layers.test(groundLayer)) {
-        child.material.colorWrite = false;
-        child.material.depthWrite = false;
-      }
-    });
+    const setWrite = (objects: THREE.Object3D[], write: boolean) => {
+      objects.forEach((object) => {
+        if (object instanceof THREE.Mesh && !object.layers.test(groundLayer)) {
+          object.material.colorWrite = write;
+          object.material.depthWrite = write;
+          if (object.children.length) {
+            setWrite(object.children, write);
+          }
+        }
+      });
+    };
+
+    setWrite(this.scene.children, false);
+    // this.scene.children.forEach((child) => {
+    //   if (child instanceof THREE.Mesh && !child.layers.test(groundLayer)) {
+    //     child.material.colorWrite = false;
+    //     child.material.depthWrite = false;
+    //   }
+    // });
 
     this.renderer.setRenderTarget(this.groundAndDepthRenderTarget);
     this.renderer.render(this.scene, this.topdownCamera);
 
-    this.scene.children.forEach((child) => {
-      if (child instanceof THREE.Mesh && !child.layers.test(groundLayer)) {
-        child.material.colorWrite = true;
-        child.material.depthWrite = true;
-      }
-    });
+    setWrite(this.scene.children, true);
+    // this.scene.children.forEach((child) => {
+    //   if (child instanceof THREE.Mesh && !child.layers.test(groundLayer)) {
+    //     child.material.colorWrite = true;
+    //     child.material.depthWrite = true;
+    //     // console.log(child.children);
+    //   }
+    // });
 
     this._groundDiffuseTexture = this.groundAndDepthRenderTarget.texture;
     this._groundDepthTexture = this.groundAndDepthRenderTarget.depthTexture;
@@ -180,17 +195,17 @@ export class RenderedTextures {
   private createRenderTarget(
     width: number,
     height: number,
-    depthTexture: boolean
+    depthTexture: boolean,
   ) {
     const renderTarget = new THREE.WebGLRenderTarget(
       width,
       height,
       depthTexture
         ? {
-            depthTexture: new THREE.DepthTexture(width, height),
-            depthBuffer: true,
-          }
-        : undefined
+          depthTexture: new THREE.DepthTexture(width, height),
+          depthBuffer: true,
+        }
+        : undefined,
     );
     renderTarget.texture.format = THREE.RGBAFormat;
     renderTarget.texture.minFilter = THREE.NearestFilter;

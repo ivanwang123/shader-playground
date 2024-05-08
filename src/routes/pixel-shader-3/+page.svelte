@@ -14,6 +14,7 @@
     EffectComposer,
     GammaCorrectionShader,
     GodRaysDepthMaskShader,
+    MeshSurfaceSampler,
     OrbitControls,
     RenderPass,
     ShaderPass,
@@ -45,7 +46,7 @@
   // Resolution
   const resolution = new THREE.Vector2(
     window.innerWidth / intensity.value,
-    window.innerHeight / intensity.value
+    window.innerHeight / intensity.value,
   );
 
   // Models
@@ -54,9 +55,6 @@
 
   const cube = addCube({ position: new THREE.Vector3(1, 0.5, 1) });
   scene.add(cube);
-
-  const cube2 = addCube({ position: new THREE.Vector3(0, 0.8, 6) });
-  scene.add(cube2);
 
   const sphere = addSphere({ position: new THREE.Vector3(2.5, 0.5, 1) });
   scene.add(sphere);
@@ -68,7 +66,11 @@
   // const waterfall = addWaterfall({ position: new THREE.Vector3(-3, 5, 0) });
   // scene.add(waterfall);
 
-  const grass = addGrass(topdownCamera);
+  const groundSampler = new MeshSurfaceSampler(ground)
+    .setWeightAttribute(null)
+    .build();
+
+  const grass = addGrass(topdownCamera, groundSampler);
   // scene.add(grass);
 
   const texture = addTexture(resolution, camera);
@@ -98,7 +100,7 @@
       scene,
       camera,
       topdownCamera,
-      resolution
+      resolution,
     );
 
     // Composer
@@ -136,8 +138,8 @@
       grass.material.uniforms.uTime.value = elapsedTime;
       grass.material.uniforms.tGround.value =
         renderedTextures.groundDiffuseTexture;
-      grass.material.uniforms.tGroundDepth.value =
-        renderedTextures.groundDepthTexture;
+      // grass.material.uniforms.tGroundDepth.value =
+      //   renderedTextures.groundDepthTexture;
 
       water.material.uniforms.uTime.value = elapsedTime;
       water.material.uniforms.tRealDiffuse.value =

@@ -15,7 +15,7 @@ export class PixelPass extends Pass {
   constructor(
     resolution: THREE.Vector2,
     camera: THREE.Camera,
-    renderedTextures: RenderedTextures
+    renderedTextures: RenderedTextures,
   ) {
     super();
 
@@ -28,7 +28,7 @@ export class PixelPass extends Pass {
   render(
     renderer: THREE.WebGLRenderer,
     writeBuffer: THREE.WebGLRenderTarget,
-    readBuffer: THREE.WebGLRenderTarget
+    readBuffer: THREE.WebGLRenderTarget,
   ) {
     const uniforms = (this.fsQuad.material as THREE.ShaderMaterial).uniforms;
 
@@ -79,7 +79,7 @@ export class PixelPass extends Pass {
             this.resolution.x,
             this.resolution.y,
             1 / this.resolution.x,
-            1 / this.resolution.y
+            1 / this.resolution.y,
           ),
         },
       },

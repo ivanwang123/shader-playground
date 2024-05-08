@@ -1,6 +1,6 @@
-uniform sampler2D tGroundDepth;
+// uniform sampler2D tGroundDepth;
 
-uniform float uFar;
+// uniform float uFar;
 uniform float uTime;
 
 uniform vec2 uResolution;
@@ -12,15 +12,16 @@ void main() {
   vUv = uv;
   vWorldPosition = instanceMatrix[3];
 
-  vec4 mvPosition = instanceMatrix * vec4(position, 1.0);
+  vec4 instancePosition = instanceMatrix * vec4(position, 1.0);
 
-  float dispPower = 1.0 - cos(uv.y * 3.1416 / 2.0);
-  float displacement = sin(mvPosition.z + uTime * 2.0) * (0.08 * dispPower);
-  mvPosition.z += displacement;
+  float windPower = 1.0 - cos(uv.y * 3.1416 / 2.0);
+  float windDisplacement =
+      sin(instancePosition.z + uTime * 2.0) * (0.08 * windPower);
+  instancePosition.z += windDisplacement;
 
-  vec2 groundUV = vec2(vWorldPosition.x, -vWorldPosition.z) / uResolution + 0.5;
-  float groundDepth = texture2D(tGroundDepth, groundUV).r;
-  mvPosition.y -= groundDepth * uFar - 5.0;
+  // vec2 groundUV = vec2(vWorldPosition.x, -vWorldPosition.z) / uResolution +
+  // 0.5; float groundDepth = texture2D(tGroundDepth, groundUV).r;
+  // instancePosition.y -= groundDepth * uFar - 5.0;
 
-  gl_Position = projectionMatrix * modelViewMatrix * mvPosition;
+  gl_Position = projectionMatrix * modelViewMatrix * instancePosition;
 }

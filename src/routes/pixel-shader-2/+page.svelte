@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import * as THREE from "three";
 
   import PixelPass from "$lib/shaders/pixel2/PixelPass";
@@ -36,7 +35,7 @@
 
   const resolution = new THREE.Vector2(
     window.innerWidth / intensity.value,
-    window.innerHeight / intensity.value
+    window.innerHeight / intensity.value,
   );
 
   onMount(() => {
@@ -56,7 +55,7 @@
       75,
       window.innerWidth / window.innerHeight,
       0.1,
-      1000
+      1000,
     );
 
     // const topdownCamera = new THREE.OrthographicCamera(
@@ -156,7 +155,7 @@
       //   depthWrite: false,
       // }),
       // toon,
-      instanceCount
+      instanceCount,
     );
     instancedGrass.layers.set(2);
     camera.layers.enable(2);
@@ -167,7 +166,7 @@
       dummyGrass.position.set(
         (Math.random() - 0.5) * 10,
         0,
-        (Math.random() - 0.5) * 10
+        (Math.random() - 0.5) * 10,
       );
       dummyGrass.scale.setScalar(0.5 + Math.random() * 0.5);
       dummyGrass.rotation.y = (Math.random() * Math.PI) / 5;
@@ -206,7 +205,7 @@
         pixelPass.rgbRenderTarget = pixelPass.createRenderTarget(
           window.innerWidth / intensity.value,
           window.innerHeight / intensity.value,
-          false
+          false,
         );
       });
 

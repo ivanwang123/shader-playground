@@ -1,17 +1,17 @@
 # Features
 
-- [-] Water
+- [x] Water
   - [x] Transparency
   - [x] Distortion
   - [x] Edge foam
   - [x] Reflection
   - [x] Waves
-  - [ ] Dynamic lighting
-- [-] Grass
+  - [x] Dynamic lighting
+- [x] Grass
   - [x] Color and shadow
   - [x] Dynamic lighting
   - [x] Wind movement
-  - [ ] Spawn on grass terrain only
+  - [x] Spawn on grass terrain only
 - [-] Lights
   - [x] Directional light
   - [x] Point light
@@ -26,6 +26,8 @@
   - [ ] Day/night cycle
 - [ ] Structures
   - [ ] Tree
+- [ ] Toon material
+  - [ ] Customizable lighting (specular, rim)
 
 # Bugs
 

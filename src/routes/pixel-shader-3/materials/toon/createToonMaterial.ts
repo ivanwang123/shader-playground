@@ -42,6 +42,7 @@ export function createToonMaterial(texture: THREE.Texture | THREE.Color) {
   return toonMaterial;
 }
 
+// TODO: Turn 10.0 into variable
 function generateFragmentShader(
   shader: THREE.WebGLProgramParametersWithUniforms
 ) {
@@ -56,7 +57,7 @@ function generateFragmentShader(
 					pointShadow${i}.shadowCameraNear, pointShadow${i}.shadowCameraFar);
 
 			vec3 pointLightDirection${i} = pointLights[${i}].position - vViewPosition;
-			float pointLightDistance${i} =
+				float pointLightDistance${i} =
 					sqrt(dot(pointLightDirection${i}, pointLightDirection${i}));
 
 			float NdotP${i} = dot(vNormal, normalize(pointLightDirection${i}));
@@ -85,7 +86,7 @@ function generateFragmentShader(
 			float directionalLevel${i} = floor(directionalLightIntensity${i} * levels);
 			directionalLightIntensity${i} = directionalLevel${i} / levels;
 
-			directionalLight += directionalLights[${i}].color *
+			directionalLight += directionalLights[${i}].color / 10.0 *
 													directionalLightIntensity${i} *
 													directionalShadowIntensity${i};
 

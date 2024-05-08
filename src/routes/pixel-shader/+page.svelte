@@ -68,7 +68,7 @@
       .onChange(
         () =>
           (pixelEffect.uniforms.uIntensity.value =
-            pixelEffectUniforms.uIntensity.value)
+            pixelEffectUniforms.uIntensity.value),
       )
       .name("intensity");
 
