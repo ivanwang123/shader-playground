@@ -234,6 +234,7 @@ void main() {
   //                                 pointLight + specular + rim),
   //          1.0);
   // gl_FragColor = vec4(color, 1.0);
-  gl_FragColor =
-      vec4(color * (ambientLightColor + directionalLight + pointLight), 1.0);
+  gl_FragColor = vec4(
+      color * (ambientLightColor + directionalLight + pointLight + specular),
+      1.0);
 }
