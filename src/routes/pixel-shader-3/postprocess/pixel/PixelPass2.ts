@@ -79,22 +79,34 @@ export class PixelPass2 extends Pass {
         },
       },
       vertexShader: `
-                varying vec2 vUv;
+varying vec2 vUv;
 
-                void main() {
-                    vUv = uv;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-                }
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+}
                 `,
       fragmentShader: `
-                uniform sampler2D tDiffuse;
-                uniform sampler2D tDepth;
-                uniform sampler2D tPrevDiffuse;
-                uniform sampler2D tPrevDepth;
-                uniform vec4 uResolution;
+uniform sampler2D tDiffuse;
+uniform sampler2D tDepth;
+uniform sampler2D tPrevDiffuse;
+uniform sampler2D tPrevDepth;
+uniform vec4 uResolution;
 uniform mat4 uInverseProjectionMatrix;
 
-                varying vec2 vUv;
+varying vec2 vUv;
+
+const float ditherMatrix[16] = float[](
+    0.0,  0.5,  0.125, 0.625,
+    0.75, 0.25, 0.875, 0.375,
+    0.1875, 0.6875, 0.0625, 0.5625,
+    0.9375, 0.4375, 0.8125, 0.3125
+);
+
+float getDitherValue(ivec2 pixelPos) {
+    int index = (pixelPos.x % 4) + (pixelPos.y % 4) * 4;
+    return ditherMatrix[index];
+}
 
 float getDepth(sampler2D depthTexture, vec2 uv) {
   float depth = texture2D(depthTexture, uv).r;
@@ -104,18 +116,26 @@ float getDepth(sampler2D depthTexture, vec2 uv) {
   return -view.z;
 }
 
-                void main() {
-                    vec2 iuv = (floor(uResolution.xy * vUv) + 0.5) * uResolution.zw;
-										vec4 texel;
+void main() {
+  vec2 iuv = (floor(uResolution.xy * vUv) + 0.5) * uResolution.zw;
+  vec4 texel;
 
-										if (texture2D(tDepth, iuv).r < texture2D(tPrevDepth, iuv).r) {
-											texel = texture2D(tDiffuse, iuv);
-										} else {
-											// texel = texture2D(tPrevDiffuse, iuv);
-											texel = texture2D(tDiffuse, iuv);
-										}
-                    gl_FragColor = texel;
-                }
+  if (texture2D(tDepth, iuv).r < texture2D(tPrevDepth, iuv).r) {
+    texel = texture2D(tDiffuse, iuv);
+  } else {
+    // texel = texture2D(tPrevDiffuse, iuv);
+    texel = texture2D(tDiffuse, iuv);
+  }
+
+  float diff = 1.0;
+
+  ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
+  float ditherValue = getDitherValue(pixelCoord);
+
+  diff = floor(diff * 5.0 + ditherValue) / 5.0;
+
+  gl_FragColor = texel * diff;
+}
                 `,
     });
   }

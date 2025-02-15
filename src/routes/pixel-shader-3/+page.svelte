@@ -46,7 +46,7 @@
   // Resolution
   const resolution = new THREE.Vector2(
     window.innerWidth / intensity.value,
-    window.innerHeight / intensity.value,
+    window.innerHeight / intensity.value
   );
 
   // Models
@@ -100,7 +100,7 @@
       scene,
       camera,
       topdownCamera,
-      resolution,
+      resolution
     );
 
     // Composer

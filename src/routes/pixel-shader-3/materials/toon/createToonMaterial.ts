@@ -61,7 +61,7 @@ function generateFragmentShader(
 					sqrt(dot(pointLightDirection${i}, pointLightDirection${i}));
 
 			float NdotP${i} = dot(vNormal, normalize(pointLightDirection${i}));
-			float pointLightIntensity${i} = max(NdotP${i}, 0.0);
+			float pointLightIntensity${i} = max(NdotP${i} + ditherOffset, 0.0);
 			float pLevel${i} = floor(pointLightIntensity${i} * levels);
 			pointLightIntensity${i} = pLevel${i} / levels;
 
@@ -82,11 +82,11 @@ function generateFragmentShader(
 				
 			float NdotD${i} = dot(vNormal, directionalLights[${i}].direction);
 
-			float directionalLightIntensity${i} = max(NdotD${i}, 0.0);
+			float directionalLightIntensity${i} = max(NdotD${i} + ditherOffset, 0.0);
 			float directionalLevel${i} = floor(directionalLightIntensity${i} * levels);
 			directionalLightIntensity${i} = directionalLevel${i} / levels;
 
-			directionalLight += directionalLights[${i}].color / 10.0 *
+			directionalLight += directionalLights[${i}].color *
 													directionalLightIntensity${i} *
 													directionalShadowIntensity${i};
 
@@ -127,8 +127,47 @@ function generateFragmentShader(
 		varying vec3 vViewPosition;
 
 		const float levels = 3.0;
+    const float ditheringLevels = 1.0 / 10.0;
+
+    // Bayer 4x4 dithering matrix
+    // const float ditherMatrix[64] = float[](
+    //     0.0 / 64.0,  48.0 / 64.0, 12.0 / 64.0, 60.0 / 64.0,  3.0 / 64.0, 51.0 / 64.0, 15.0 / 64.0, 63.0 / 64.0,
+    //   32.0 / 64.0,  16.0 / 64.0, 44.0 / 64.0, 28.0 / 64.0, 35.0 / 64.0, 19.0 / 64.0, 47.0 / 64.0, 31.0 / 64.0,
+    //     8.0 / 64.0,  56.0 / 64.0,  4.0 / 64.0, 52.0 / 64.0, 11.0 / 64.0, 59.0 / 64.0,  7.0 / 64.0, 55.0 / 64.0,
+    //   40.0 / 64.0,  24.0 / 64.0, 36.0 / 64.0, 20.0 / 64.0, 43.0 / 64.0, 27.0 / 64.0, 39.0 / 64.0, 23.0 / 64.0,
+    //     2.0 / 64.0,  50.0 / 64.0, 14.0 / 64.0, 62.0 / 64.0,  1.0 / 64.0, 49.0 / 64.0, 13.0 / 64.0, 61.0 / 64.0,
+    //   34.0 / 64.0,  18.0 / 64.0, 46.0 / 64.0, 30.0 / 64.0, 33.0 / 64.0, 17.0 / 64.0, 45.0 / 64.0, 29.0 / 64.0,
+    //   10.0 / 64.0,  58.0 / 64.0,  6.0 / 64.0, 54.0 / 64.0,  9.0 / 64.0, 57.0 / 64.0,  5.0 / 64.0, 53.0 / 64.0,
+    //   42.0 / 64.0,  26.0 / 64.0, 38.0 / 64.0, 22.0 / 64.0, 41.0 / 64.0, 25.0 / 64.0, 37.0 / 64.0, 21.0 / 64.0
+    // );
+
+    const float ditherMatrix[16] = float[](
+        0.0,  0.5,  0.125, 0.625,
+        0.75, 0.25, 0.875, 0.375,
+        0.1875, 0.6875, 0.0625, 0.5625,
+        0.9375, 0.4375, 0.8125, 0.3125
+    );
+
+    // const float ditherMatrix[9] = float[](
+    //     0.0 / 9.0, 7.0 / 9.0, 3.0 / 9.0,
+    //     6.0 / 9.0, 5.0 / 9.0, 2.0 / 9.0,
+    //     4.0 / 9.0, 1.0 / 9.0, 8.0 / 9.0
+    // );
+
+    // const float bayer2x2[4] = float[](
+    //     0.0 / 4.0,  2.0 / 4.0,
+    //     3.0 / 4.0,  1.0 / 4.0
+    // );
+
+    float getDitherValue(ivec2 pixelCoord) {
+        int index = (pixelCoord.x % 4) + (pixelCoord.y % 4) * 4;
+        return ditherMatrix[index] - 0.5; // Center around zero
+    }
 
 		void main() {
+      ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
+      float ditherOffset = getDitherValue(pixelCoord) * ditheringLevels; // Scale dithering
+
 			vec3 pointLight = vec3(0.0, 0.0, 0.0);
 			vec3 directionalLight = vec3(0.0, 0.0, 0.0);
 			vec3 specular = vec3(0.0, 0.0, 0.0);
@@ -136,11 +175,7 @@ function generateFragmentShader(
 	`;
 
   const remaining = `
-			// gl_FragColor = vec4(uColor * (ambientLightColor + directionalLight +
-			// 															pointLight + specular + rim),
-			// 										1.0);
-
-			gl_FragColor = vec4(uColor * (ambientLightColor / 10.0 + directionalLight + pointLight + specular + rim), 1.0);
+			gl_FragColor = vec4(uColor * (ambientLightColor + directionalLight + pointLight + specular + rim), 1.0);
 		}
 	`;
 

@@ -4,9 +4,11 @@ import waterVert from "./water.vert";
 import waterFrag from "./water.frag";
 import { DEPTHLESS_LAYER } from "../../constants";
 import { RenderedTextures } from "../../RenderedTextures";
+import { createToonMaterial } from "$lib/materials/toon/createToonMaterial";
 
 export function addWater(camera: THREE.Camera) {
-  const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
+  // const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
+  const wallMaterial = createToonMaterial(new THREE.Color(0xaaaaaa));
   const wallGeometry = new THREE.BoxGeometry(5, 1, 0.5);
   const wall1 = new THREE.Mesh(wallGeometry, wallMaterial);
   const wall2 = new THREE.Mesh(wallGeometry, wallMaterial);

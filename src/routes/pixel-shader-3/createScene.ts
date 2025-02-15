@@ -11,8 +11,8 @@ type Options = {
 
 const defaultOptions: Required<Options> = {
   backgroundColor: 0xfef6c9,
-  ambientLightIntensity: 1,
-  directionalLightIntensity: 1,
+  ambientLightIntensity: 0,
+  directionalLightIntensity: 0,
   castShadow: true,
 };
 
