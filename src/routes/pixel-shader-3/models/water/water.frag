@@ -34,12 +34,27 @@ varying vec3 vViewDir;
 varying vec3 vViewPosition;
 
 const float levels = 3.0;
+const float ditheringLevels = 1.0 / 10.0;
+
+// Bayer 4x4 dithering matrix
+const float ditherMatrix[16] =
+    float[](0.0, 0.5, 0.125, 0.625, 0.75, 0.25, 0.875, 0.375, 0.1875, 0.6875,
+            0.0625, 0.5625, 0.9375, 0.4375, 0.8125, 0.3125);
+
+float getDitherValue(ivec2 pixelCoord) {
+  int index = (pixelCoord.x % 4) + (pixelCoord.y % 4) * 4;
+  return ditherMatrix[index] - 0.5; // Center around zero
+}
 
 float linearize(float depth) {
   return uNear * uFar / (uFar + depth * (uNear - uFar));
 }
 
 void main() {
+  ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
+  float ditherOffset =
+      getDitherValue(pixelCoord) * ditheringLevels; // Scale dithering
+
   vec3 pointLight = vec3(0.0, 0.0, 0.0);
   vec3 directionalLight = vec3(0.0, 0.0, 0.0);
   vec3 specular = vec3(0.0, 0.0, 0.0);
@@ -60,12 +75,30 @@ void main() {
       sqrt(dot(pointLightDirection0, pointLightDirection0));
 
   float NdotP0 = dot(vNormal, normalize(pointLightDirection0));
-  float pointLightIntensity0 = max(-NdotP0, 0.0);
+  float pointLightIntensity0 = max(-NdotP0 + ditherOffset, 0.0);
   float pLevel0 = floor(pointLightIntensity0 * levels);
   pointLightIntensity0 = pLevel0 / levels;
 
-  // pointLight += pointLights[0].color * pointLightIntensity0 *
-  //               pointShadowIntensity0 / pow(pointLightDistance0, 2.0);
+  // PointLightShadow pointShadow1 = pointLightShadows[1];
+
+  // float pointShadowIntensity1 = getPointShadow(
+  //     pointShadowMap[1], pointShadow1.shadowMapSize, pointShadow1.shadowBias,
+  //     pointShadow1.shadowRadius, vPointShadowCoord[1],
+  //     pointShadow1.shadowCameraNear, pointShadow1.shadowCameraFar);
+
+  // vec3 pointLightDirection1 =
+  //     pointLights[1].position -
+  //     vec3(-vViewPosition.x, vViewPosition.y, vViewPosition.z);
+  // float pointLightDistance1 =
+  //     sqrt(dot(pointLightDirection1, pointLightDirection1));
+
+  // float NdotP1 = dot(vNormal, normalize(pointLightDirection1));
+  // float pointLightIntensity1 = max(-NdotP1 + ditherOffset, 0.0);
+  // float pLevel1 = floor(pointLightIntensity1 * levels);
+  // pointLightIntensity1 = pLevel1 / levels;
+
+  // pointLight += pointLights[1].color * pointLightIntensity1 *
+  //               pointShadowIntensity1 / pow(pointLightDistance1, 2.0);
   pointLight += pointLights[0].color * pointLightIntensity0 /
                 pow(pointLightDistance0, 2.0);
 
@@ -78,8 +111,7 @@ void main() {
                 vDirectionalShadowCoord[0]);
 
   float NdotD0 = dot(vNormal, directionalLights[0].direction);
-
-  float directionalLightIntensity0 = max(-NdotD0, 0.0);
+  float directionalLightIntensity0 = max(-NdotD0 + ditherOffset, 0.0);
   float directionalLevel0 = floor(directionalLightIntensity0 * levels);
   directionalLightIntensity0 = directionalLevel0 / levels;
 
@@ -91,7 +123,6 @@ void main() {
   // Specular lighting
   vec3 halfVector0 = normalize(directionalLights[0].direction * 1.5 + vViewDir);
   float NdotH0 = dot(vNormal, halfVector0);
-
   float specularIntensity0 = pow(NdotH0, 1000.0 / uGlossiness);
   float specularIntensitySmooth0 = smoothstep(0.05, 0.1, specularIntensity0);
 
@@ -196,13 +227,13 @@ void main() {
   vec3 foamColor = vec3(1.0, 1.0, 1.0);
 
   vec3 color = mix(waterColor, reflectionColor, 0.4);
-  color = mix(foamColor, color, step(0.25, zDiff));
+  color = mix(foamColor, color, step(0.25, zDiff - ditherOffset));
 
   // gl_FragColor =
   //     vec4(vec3(1.0, 1.0, 1.0) * (ambientLightColor + directionalLight +
   //                                 pointLight + specular + rim),
   //          1.0);
   // gl_FragColor = vec4(color, 1.0);
-  gl_FragColor = vec4(
-      color * (ambientLightColor / 10.0 + directionalLight + pointLight), 1.0);
+  gl_FragColor =
+      vec4(color * (ambientLightColor + directionalLight + pointLight), 1.0);
 }

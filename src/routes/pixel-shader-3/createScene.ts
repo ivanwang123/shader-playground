@@ -120,7 +120,7 @@ export function createScene(options?: Options) {
   directionalLightFolder
     .add(directionalLight.position, "z", -10, 10, 0.1)
     .onChange(() => directionalLightHelper.update());
-  directionalLightFolder.add(directionalLight, "intensity", 0, 10, 0.1);
+  directionalLightFolder.add(directionalLight, "intensity", 0, 1, 0.01);
   directionalLightFolder.add(directionalLight, "castShadow");
 
   const pointLightFolder = gui.addFolder("Point Light");
@@ -148,7 +148,7 @@ export function createScene(options?: Options) {
   pointLightFolder2.add(pointLight2, "intensity", 0, 10, 0.1);
 
   const ambientLightFolder = gui.addFolder("Ambient Light");
-  ambientLightFolder.add(ambientLight, "intensity", 0, 10, 0.1);
+  ambientLightFolder.add(ambientLight, "intensity", 0, 1, 0.01);
 
   return {
     scene,
