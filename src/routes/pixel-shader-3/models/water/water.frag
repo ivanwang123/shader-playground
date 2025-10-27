@@ -79,6 +79,9 @@ void main() {
   float pLevel0 = floor(pointLightIntensity0 * levels);
   pointLightIntensity0 = pLevel0 / levels;
 
+  pointLight += pointLights[0].color * pointLightIntensity0 /
+                pow(pointLightDistance0, 2.0);
+
   // PointLightShadow pointShadow1 = pointLightShadows[1];
 
   // float pointShadowIntensity1 = getPointShadow(
@@ -99,8 +102,6 @@ void main() {
 
   // pointLight += pointLights[1].color * pointLightIntensity1 *
   //               pointShadowIntensity1 / pow(pointLightDistance1, 2.0);
-  pointLight += pointLights[0].color * pointLightIntensity0 /
-                pow(pointLightDistance0, 2.0);
 
   // Directional
   DirectionalLightShadow directionalShadow0 = directionalLightShadows[0];

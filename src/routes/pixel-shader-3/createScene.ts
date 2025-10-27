@@ -102,7 +102,7 @@ export function createScene(options?: Options) {
   scene.add(pointLightHelper);
 
   const pointLight2 = new THREE.PointLight(0x0000ff, 10);
-  pointLight2.position.set(-2, 2, 0);
+  pointLight2.position.set(0, 2, 0);
   pointLight2.castShadow = true;
   scene.add(pointLight2);
 
@@ -120,7 +120,9 @@ export function createScene(options?: Options) {
   directionalLightFolder
     .add(directionalLight.position, "z", -10, 10, 0.1)
     .onChange(() => directionalLightHelper.update());
-  directionalLightFolder.add(directionalLight, "intensity", 0, 1, 0.01);
+  directionalLightFolder
+    .add(directionalLight, "intensity", 0, 1, 0.01)
+    .setValue(0.01);
   directionalLightFolder.add(directionalLight, "castShadow");
 
   const pointLightFolder = gui.addFolder("Point Light");
@@ -133,7 +135,7 @@ export function createScene(options?: Options) {
   pointLightFolder
     .add(pointLight.position, "z", -10, 10, 0.1)
     .onChange(() => pointLightHelper.update());
-  pointLightFolder.add(pointLight, "intensity", 0, 10, 0.1);
+  pointLightFolder.add(pointLight, "intensity", 0, 10, 0.1).setValue(3);
 
   const pointLightFolder2 = gui.addFolder("Point Light 2");
   pointLightFolder2
@@ -145,15 +147,17 @@ export function createScene(options?: Options) {
   pointLightFolder2
     .add(pointLight2.position, "z", -10, 10, 0.1)
     .onChange(() => pointLightHelper2.update());
-  pointLightFolder2.add(pointLight2, "intensity", 0, 10, 0.1);
+  pointLightFolder2.add(pointLight2, "intensity", 0, 10, 0.1).setValue(3);
 
   const ambientLightFolder = gui.addFolder("Ambient Light");
-  ambientLightFolder.add(ambientLight, "intensity", 0, 1, 0.01);
+  ambientLightFolder.add(ambientLight, "intensity", 0, 1, 0.01).setValue(0.01);
 
   return {
     scene,
     camera,
     topdownCamera,
     gui,
+    pointLight,
+    pointLight2,
   };
 }

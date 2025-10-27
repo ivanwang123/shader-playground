@@ -33,7 +33,8 @@
   let canvas: HTMLCanvasElement;
 
   // Create scene
-  const { scene, camera, topdownCamera, gui } = createScene();
+  const { scene, camera, topdownCamera, gui, pointLight, pointLight2 } =
+    createScene();
 
   // Clock
   const clock = new THREE.Clock();
@@ -117,6 +118,7 @@
     // composer.addPass(new GodrayPass2(resolution, camera, renderedTextures));
 
     // composer.addPass(pixelPass2);
+    // composer.addPass(new RenderPass(scene, camera));
 
     composer.addPass(new ShaderPass(GammaCorrectionShader));
 
@@ -151,6 +153,11 @@
 
       // waterfall.material.uniforms.uTime.value = elapsedTime;
 
+      // console.log(
+      //   "SHADOW MAP",
+      //   pointLight.shadow.map,
+      //   pointLight.shadow.mapSize
+      // );
       composer.render();
     };
     animate();

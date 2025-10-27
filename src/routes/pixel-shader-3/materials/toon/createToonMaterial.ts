@@ -31,18 +31,17 @@ export function createToonMaterial(texture: THREE.Texture | THREE.Color) {
 
   const toonMaterial = new THREE.ShaderMaterial({
     vertexShader: toonVert,
-    fragmentShader: "",
+    fragmentShader: toonColorFrag,
     uniforms,
     lights: true,
   });
-  toonMaterial.onBeforeCompile = (shader) => {
-    shader.fragmentShader = generateFragmentShader(shader);
-  };
+  // toonMaterial.onBeforeCompile = (shader) => {
+  //   shader.fragmentShader = generateFragmentShader(shader);
+  // };
 
   return toonMaterial;
 }
 
-// TODO: Turn 10.0 into variable
 function generateFragmentShader(
   shader: THREE.WebGLProgramParametersWithUniforms
 ) {
