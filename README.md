@@ -1,3 +1,10 @@
+# How to run
+
+1. Run `npm run dev`
+2. Go to http://localhost:5173
+3. Change url to /pixel-shader-3
+4. Open ShaderGlass and select sonkun/aperture-grille/curved-screen/1080p/35-pal-normal-rgb
+
 # Features
 
 - [x] Water
