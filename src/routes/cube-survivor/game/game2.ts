@@ -34,36 +34,12 @@ class CollisionEvent extends Component {
   public constructor(
     public entityA: Entity,
     public entityB: Entity,
-    public contactPoint: Vector2
+    public contactNormal: Vector2,
+    public penetrationDepth: number
   ) {
     super();
   }
 }
-
-// class Moveable extends Component {
-//   public dLeft: number;
-//   public dRight: number;
-//   public dUp: number;
-//   public dDown: number;
-
-//   public constructor() {
-//     super();
-//     this.dLeft = 0;
-//     this.dRight = 0;
-//     this.dUp = 0;
-//     this.dDown = 0;
-//   }
-// }
-
-// class MovementSystem extends System {
-//   public componentsRequired = new Set<Function>([Position, Moveable]);
-
-//   public update(entities: Set<Entity>) {
-//     for (let entity of entities) {
-//       this.ecs?.getComponents(entity)?.get(Position);
-//     }
-//   }
-// }
 
 enum Inputs {
   MoveUp = "w",
@@ -77,8 +53,8 @@ class InputSystem extends System {
 
   public update(entities: Set<Entity>) {
     for (const entity of entities) {
-      const components = this.ecs?.getComponents(entity);
-      const inputListener = components?.get(Input).inputListener;
+      const components = this.ecs.getComponents<Input>(entity);
+      const inputListener = components.get(Input).inputListener;
       if (inputListener) {
         let xVel = 0;
         let yVel = 0;
@@ -95,7 +71,7 @@ class InputSystem extends System {
           xVel += 10;
         }
         if (xVel !== 0 || yVel !== 0) {
-          this.ecs?.addComponent(entity, new Move(xVel, yVel));
+          this.ecs.addComponent(entity, new Move(xVel, yVel));
         }
       }
     }
@@ -111,36 +87,58 @@ class CollisionDetectionSystem extends System {
       for (let j = i + 1; j < entitiesArray.length; j++) {
         const entityA = entitiesArray[i];
         const entityB = entitiesArray[j];
-        const componentsA = this.ecs?.getComponents(entityA);
-        const componentsB = this.ecs?.getComponents(entityB);
-        const positionA = componentsA?.get(Position);
-        const colliderA = componentsA?.get(CircleCollider);
-        const positionB = componentsB?.get(Position);
-        const colliderB = componentsB?.get(CircleCollider);
-        if (!positionA || !colliderA || !positionB || !colliderB) continue;
+        const componentsA = this.ecs.getComponents(entityA);
+        const componentsB = this.ecs.getComponents(entityB);
+        const positionA = componentsA.get(Position);
+        const colliderA = componentsA.get(CircleCollider);
+        const positionB = componentsB.get(Position);
+        const colliderB = componentsB.get(CircleCollider);
         // TODO: Optimize collision detection
-        if (
-          Math.hypot(positionA.x - positionB.x, positionA.y - positionB.y) <
-          colliderA.radius + colliderB.radius
-        ) {
+        const distance = Math.hypot(
+          positionA.x - positionB.x,
+          positionA.y - positionB.y
+        );
+        const minDistance = colliderA.radius + colliderB.radius;
+        if (distance < minDistance) {
           console.log("COLLISION DETECTED");
-          if (this.ecs) {
-            const collision = this.ecs.addEntity();
-            this.ecs.addComponent(collision, new Position());
-          }
+          const collision = this.ecs.addEntity();
+          const penetrationDepth = minDistance - distance;
+          const contactNormal = {
+            x: (positionB.x - positionA.x) / distance,
+            y: (positionB.y - positionA.y) / distance,
+          };
+          this.ecs.addComponent(
+            collision,
+            new CollisionEvent(
+              entityA,
+              entityB,
+              contactNormal,
+              penetrationDepth
+            )
+          );
         }
       }
     }
   }
 }
 
-class PhysicsResolutionSystem extends System {
+class CollisionResolutionSystem extends System {
   public componentsRequired = new Set<Function>([CollisionEvent]);
 
   public update(entities: Set<Entity>) {
     for (const entity of entities) {
-      const components = this.ecs?.getComponents(entity);
-      // TODO
+      const components = this.ecs.getComponents(entity);
+      const collisionEvent = components.get(CollisionEvent);
+      const resolutionOffset = collisionEvent.penetrationDepth / 2;
+      const componentsA = this.ecs.getComponents(collisionEvent.entityA);
+      const componentsB = this.ecs.getComponents(collisionEvent.entityB);
+      const positionA = componentsA.get(Position);
+      const positionB = componentsB.get(Position);
+      positionA.x -= collisionEvent.contactNormal.x * resolutionOffset;
+      positionA.y -= collisionEvent.contactNormal.y * resolutionOffset;
+      positionB.x += collisionEvent.contactNormal.x * resolutionOffset;
+      positionB.y += collisionEvent.contactNormal.y * resolutionOffset;
+      this.ecs.removeEntity(entity);
     }
   }
 }
@@ -171,17 +169,18 @@ class RenderSystem extends System {
     this.renderer.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 
     for (const entity of entities) {
-      const components = this.ecs?.getComponents(entity);
-      const position = components?.get(Position);
-      const collider = components?.get(CircleCollider);
-      if (position && collider) {
-        this.renderer.strokeRect(
-          position.x,
-          position.y,
-          collider.radius * 2,
-          collider.radius * 2
-        );
-      }
+      const components = this.ecs.getComponents(entity);
+      const position = components.get(Position);
+      const collider = components.get(CircleCollider);
+      this.renderer.beginPath();
+      this.renderer.arc(
+        position.x,
+        position.y,
+        collider.radius,
+        0,
+        2 * Math.PI
+      );
+      this.renderer.stroke();
     }
   }
 }
@@ -191,14 +190,23 @@ class MovementSystem extends System {
 
   public update(entities: Set<Entity>) {
     for (let entity of entities) {
-      const components = this.ecs?.getComponents(entity);
-      const move = components?.get(Move);
-      const position = components?.get(Position);
-      if (position && move) {
-        position.x += move.xVel;
-        position.y += move.yVel;
-        this.ecs?.removeComponent(entity, Move);
-      }
+      const components = this.ecs.getComponents(entity);
+      const move = components.get(Move);
+      const position = components.get(Position);
+      position.x += move.xVel;
+      position.y += move.yVel;
+      this.ecs.removeComponent(entity, Move);
+    }
+  }
+}
+
+class DamageSystem extends System {
+  public componentsRequired = new Set<Function>([
+    /* Damageable, Health */
+  ]);
+
+  public update(entities: Set<Entity>) {
+    for (let entity of entities) {
     }
   }
 }
@@ -229,6 +237,7 @@ class Game {
     ecs.addSystem(new InputSystem());
     ecs.addSystem(new MovementSystem());
     ecs.addSystem(new CollisionDetectionSystem());
+    ecs.addSystem(new CollisionResolutionSystem());
     ecs.addSystem(new RenderSystem(renderer, width, height));
 
     // Player entity
@@ -248,7 +257,7 @@ class Game {
       setTimeout(function () {
         ecs.update();
         let components = ecs.getComponents(player);
-        if (components?.has(Position)) {
+        if (components.has(Position)) {
           const p = components.get(Position);
           // console.log("POSITION", p.x, p.y);
         }
