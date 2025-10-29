@@ -7,7 +7,7 @@ export abstract class System {
 
   public abstract update(entities: Set<Entity>): void;
 
-  public ecs?: ECS;
+  public ecs!: ECS;
 }
 
 export type ComponentClass<T extends Component> = new (...args: any[]) => T;
@@ -74,8 +74,12 @@ export class ECS {
     this.checkEntity(entity);
   }
 
-  public getComponents(entity: Entity): ComponentContainer | undefined {
-    return this.entities.get(entity);
+  public getComponents(entity: Entity): ComponentContainer {
+    const components = this.entities.get(entity);
+    if (!components) {
+      throw new Error(`Entity ${entity} does not exist`);
+    }
+    return components;
   }
 
   public removeComponent(entity: Entity, componentClass: Function) {
