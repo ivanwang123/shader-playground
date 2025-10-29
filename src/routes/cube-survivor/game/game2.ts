@@ -53,7 +53,7 @@ class InputSystem extends System {
 
   public update(entities: Set<Entity>) {
     for (const entity of entities) {
-      const components = this.ecs.getComponents<Input>(entity);
+      const components = this.ecs.getComponents(entity);
       const inputListener = components.get(Input).inputListener;
       if (inputListener) {
         let xVel = 0;
