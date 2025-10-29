@@ -30,6 +30,7 @@ export class RenderSystem extends System {
       const components = this.ecs.getComponents(entity);
       const position = components.get(Position);
       const collider = components.get(CircleCollider);
+
       this.renderer.beginPath();
       this.renderer.arc(
         position.x,

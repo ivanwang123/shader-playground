@@ -7,8 +7,10 @@ export class InputSystem extends System {
 
   public update(entities: Set<Entity>) {
     for (const entity of entities) {
-      const components = this.ecs.getComponents(entity);
-      const inputListener = components.get(Input).inputListener;
+      const inputListener = this.ecs
+        .getComponents(entity)
+        .get(Input).inputListener;
+
       if (inputListener) {
         let xVel = 0;
         let yVel = 0;

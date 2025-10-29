@@ -1,4 +1,5 @@
+export * from "./collision";
 export * from "./combat";
 export * from "./input";
-export * from "./physics";
+export * from "./movement";
 export * from "./render";

@@ -45,9 +45,9 @@ class Game {
     ecs.addSystem(new MovementSystem());
     ecs.addSystem(new CollisionDetectionSystem());
     ecs.addSystem(new DamageSystem());
+    ecs.addSystem(new DeathSystem());
     ecs.addSystem(new CollisionResolutionSystem());
     ecs.addSystem(new RenderSystem(renderer, width, height));
-    ecs.addSystem(new DeathSystem());
 
     // Player entity
     const player = ecs.addEntity();

@@ -7,12 +7,17 @@ import {
   Health,
   Position,
 } from "../entities";
+import {
+  calculateCircleContactNormal,
+  checkCircleCollision,
+} from "../utilities/collision";
 
 export class CollisionDetectionSystem extends System {
   public componentsRequired = new Set<Function>([Position, CircleCollider]);
 
   public update(entities: Set<Entity>) {
     let entitiesArray = Array.from(entities);
+
     for (let i = 0; i < entitiesArray.length - 1; i++) {
       for (let j = i + 1; j < entitiesArray.length; j++) {
         const entityA = entitiesArray[i];
@@ -20,22 +25,22 @@ export class CollisionDetectionSystem extends System {
         const componentsA = this.ecs.getComponents(entityA);
         const componentsB = this.ecs.getComponents(entityB);
         const positionA = componentsA.get(Position);
-        const colliderA = componentsA.get(CircleCollider);
+        const radiusA = componentsA.get(CircleCollider).radius;
         const positionB = componentsB.get(Position);
-        const colliderB = componentsB.get(CircleCollider);
-        // TODO: Optimize collision detection
-        const distance = Math.hypot(
-          positionA.x - positionB.x,
-          positionA.y - positionB.y
-        );
-        const minDistance = colliderA.radius + colliderB.radius;
-        if (distance < minDistance) {
+        const radiusB = componentsB.get(CircleCollider).radius;
+
+        if (checkCircleCollision(positionA, positionB, radiusA, radiusB)) {
           const collision = this.ecs.addEntity();
-          const penetrationDepth = minDistance - distance;
-          const contactNormal = {
-            x: (positionB.x - positionA.x) / distance,
-            y: (positionB.y - positionA.y) / distance,
-          };
+          const distance = Math.hypot(
+            positionB.x - positionA.x,
+            positionB.y - positionA.y
+          );
+          const penetrationDepth = radiusA + radiusB - distance;
+          const contactNormal = calculateCircleContactNormal(
+            positionA,
+            positionB,
+            distance
+          );
           this.ecs.addComponent(
             collision,
             new CollisionEvent(
@@ -71,17 +76,20 @@ export class CollisionResolutionSystem extends System {
 
   public update(entities: Set<Entity>) {
     for (const entity of entities) {
-      const components = this.ecs.getComponents(entity);
-      const collisionEvent = components.get(CollisionEvent);
+      const collisionEvent = this.ecs.getComponents(entity).get(CollisionEvent);
       const resolutionOffset = collisionEvent.penetrationDepth / 2 + 0.1;
-      const componentsA = this.ecs.getComponents(collisionEvent.entityA);
-      const componentsB = this.ecs.getComponents(collisionEvent.entityB);
-      const positionA = componentsA.get(Position);
-      const positionB = componentsB.get(Position);
+
+      const positionA = this.ecs
+        .getComponents(collisionEvent.entityA)
+        .get(Position);
+      const positionB = this.ecs
+        .getComponents(collisionEvent.entityB)
+        .get(Position);
       positionA.x -= collisionEvent.contactNormal.x * resolutionOffset;
       positionA.y -= collisionEvent.contactNormal.y * resolutionOffset;
       positionB.x += collisionEvent.contactNormal.x * resolutionOffset;
       positionB.y += collisionEvent.contactNormal.y * resolutionOffset;
+
       this.ecs.removeEntity(entity);
     }
   }
