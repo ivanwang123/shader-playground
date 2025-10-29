@@ -100,7 +100,6 @@ class CollisionDetectionSystem extends System {
         );
         const minDistance = colliderA.radius + colliderB.radius;
         if (distance < minDistance) {
-          console.log("COLLISION DETECTED");
           const collision = this.ecs.addEntity();
           const penetrationDepth = minDistance - distance;
           const contactNormal = {
@@ -116,8 +115,43 @@ class CollisionDetectionSystem extends System {
               penetrationDepth
             )
           );
+
+          if (
+            this.ecs.getComponents(entityA).has(Health) &&
+            this.ecs.getComponents(entityB).has(Damage)
+          ) {
+            const attack = this.ecs.addEntity();
+            this.ecs.addComponent(attack, new DamageEvent(entityB, entityA));
+          }
+          if (
+            this.ecs.getComponents(entityB).has(Health) &&
+            this.ecs.getComponents(entityA).has(Damage)
+          ) {
+            const attack = this.ecs.addEntity();
+            this.ecs.addComponent(attack, new DamageEvent(entityA, entityB));
+          }
         }
       }
+    }
+  }
+}
+
+class DeathEvent extends Component {
+  public constructor(public entity: Entity) {
+    super();
+  }
+}
+
+class DeathSystem extends System {
+  public componentsRequired = new Set<Function>([DeathEvent]);
+
+  public update(entities: Set<Entity>) {
+    for (const entity of entities) {
+      const components = this.ecs.getComponents(entity);
+      const deathEvent = components.get(DeathEvent);
+      const deadEntity = deathEvent.entity;
+      this.ecs.removeEntity(deadEntity);
+      this.ecs.removeEntity(entity);
     }
   }
 }
@@ -129,7 +163,7 @@ class CollisionResolutionSystem extends System {
     for (const entity of entities) {
       const components = this.ecs.getComponents(entity);
       const collisionEvent = components.get(CollisionEvent);
-      const resolutionOffset = collisionEvent.penetrationDepth / 2;
+      const resolutionOffset = collisionEvent.penetrationDepth / 2 + 0.1;
       const componentsA = this.ecs.getComponents(collisionEvent.entityA);
       const componentsB = this.ecs.getComponents(collisionEvent.entityB);
       const positionA = componentsA.get(Position);
@@ -181,6 +215,15 @@ class RenderSystem extends System {
         2 * Math.PI
       );
       this.renderer.stroke();
+
+      if (components.has(Health)) {
+        const health = components.get(Health);
+        this.renderer.fillText(
+          `HP: ${health.health}`,
+          position.x - collider.radius,
+          position.y - collider.radius - 10
+        );
+      }
     }
   }
 }
@@ -200,13 +243,44 @@ class MovementSystem extends System {
   }
 }
 
+class Health extends Component {
+  public constructor(public health: number) {
+    super();
+  }
+}
+
+class Damage extends Component {
+  public constructor(public damage: number) {
+    super();
+  }
+}
+
+class DamageEvent extends Component {
+  public constructor(public attacker: Entity, public target: Entity) {
+    super();
+  }
+}
+
 class DamageSystem extends System {
-  public componentsRequired = new Set<Function>([
-    /* Damageable, Health */
-  ]);
+  public componentsRequired = new Set<Function>([DamageEvent]);
 
   public update(entities: Set<Entity>) {
     for (let entity of entities) {
+      const components = this.ecs.getComponents(entity);
+      const damageEvent = components.get(DamageEvent);
+      console.log(
+        `Entity ${damageEvent.attacker} dealt damage to Entity ${damageEvent.target}`
+      );
+      const attacker = damageEvent.attacker;
+      const target = damageEvent.target;
+      this.ecs.getComponents(target).get(Health).health -= this.ecs
+        .getComponents(attacker)
+        .get(Damage).damage;
+      if (this.ecs.getComponents(target).get(Health).health <= 0) {
+        const deathEntity = this.ecs.addEntity();
+        this.ecs.addComponent(deathEntity, new DeathEvent(target));
+      }
+      this.ecs.removeEntity(entity);
     }
   }
 }
@@ -237,30 +311,29 @@ class Game {
     ecs.addSystem(new InputSystem());
     ecs.addSystem(new MovementSystem());
     ecs.addSystem(new CollisionDetectionSystem());
+    ecs.addSystem(new DamageSystem());
     ecs.addSystem(new CollisionResolutionSystem());
     ecs.addSystem(new RenderSystem(renderer, width, height));
+    ecs.addSystem(new DeathSystem());
 
     // Player entity
     const player = ecs.addEntity();
     ecs.addComponent(player, new Position(10, 10));
     ecs.addComponent(player, new CircleCollider(10));
     ecs.addComponent(player, new Input(new InputListener()));
+    ecs.addComponent(player, new Health(100));
     ecs.addComponent(player, new Render());
 
     // Enemy entity
     const enemy = ecs.addEntity();
     ecs.addComponent(enemy, new Position(105, 105));
     ecs.addComponent(enemy, new CircleCollider(10));
+    ecs.addComponent(enemy, new Damage(10));
     ecs.addComponent(enemy, new Render());
 
     let gameLoop = function () {
       setTimeout(function () {
         ecs.update();
-        let components = ecs.getComponents(player);
-        if (components.has(Position)) {
-          const p = components.get(Position);
-          // console.log("POSITION", p.x, p.y);
-        }
         gameLoop();
       }, 100);
     };
