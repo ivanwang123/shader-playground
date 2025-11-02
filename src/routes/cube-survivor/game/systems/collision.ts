@@ -41,6 +41,7 @@ export class CollisionDetectionSystem extends System {
             positionB,
             distance
           );
+          console.log(penetrationDepth, contactNormal);
           this.ecs.addComponent(
             collision,
             new CollisionEvent(

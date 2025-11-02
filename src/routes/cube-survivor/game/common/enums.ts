@@ -3,6 +3,7 @@ enum Input {
   MoveLeft = "a",
   MoveDown = "s",
   MoveRight = "d",
+  Shoot = " ",
 }
 
 export default {
