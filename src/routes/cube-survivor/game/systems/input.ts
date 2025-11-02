@@ -1,15 +1,17 @@
 import { System, type Entity } from "../ecs";
-import { Input, Move, Position } from "../entities";
+import { Input, Velocity, Position } from "../entities";
 import Enums from "../common/enums";
 
 export class InputSystem extends System {
-  public componentsRequired = new Set<Function>([Input, Position]);
+  public componentsRequired = new Set<Function>([Input, Position, Velocity]);
 
   public update(entities: Set<Entity>) {
     for (const entity of entities) {
       const inputListener = this.ecs
         .getComponents(entity)
         .get(Input).inputListener;
+
+      const velocity = this.ecs.getComponents(entity).get(Velocity);
 
       if (inputListener) {
         let xVel = 0;
@@ -26,9 +28,8 @@ export class InputSystem extends System {
         if (inputListener.isPressed(Enums.Input.MoveRight)) {
           xVel += 10;
         }
-        if (xVel !== 0 || yVel !== 0) {
-          this.ecs.addComponent(entity, new Move(xVel, yVel));
-        }
+        velocity.xVel = xVel;
+        velocity.yVel = yVel;
       }
     }
   }

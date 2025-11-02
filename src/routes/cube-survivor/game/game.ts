@@ -6,6 +6,7 @@ import {
   Input,
   Position,
   Render,
+  Velocity,
 } from "./entities";
 import InputListener from "./utilities/input-listener";
 import {
@@ -52,6 +53,7 @@ class Game {
     // Player entity
     const player = ecs.addEntity();
     ecs.addComponent(player, new Position(10, 10));
+    ecs.addComponent(player, new Velocity(0, 0));
     ecs.addComponent(player, new CircleCollider(10));
     ecs.addComponent(player, new Input(new InputListener()));
     ecs.addComponent(player, new Health(100));
