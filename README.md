@@ -5,6 +5,8 @@
 3. Change url to /pixel-shader-3
 4. Open ShaderGlass and select sonkun/aperture-grille/curved-screen/1080p/35-pal-normal-rgb
 
+hi
+
 # Features
 
 - [x] Water
