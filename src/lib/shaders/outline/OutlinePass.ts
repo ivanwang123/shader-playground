@@ -1,0 +1,189 @@
+import { FullScreenQuad, Pass } from "three/examples/jsm/Addons.js";
+import * as THREE from "three";
+
+import outlineVert from "./outline.vert";
+import outlineFrag from "./outline.frag";
+
+export default class PixelPass extends Pass {
+  resolution: THREE.Vector2;
+  scene: THREE.Scene;
+  camera: THREE.Camera;
+  topdownCamera: THREE.Camera;
+  fsQuad: FullScreenQuad;
+  rgbRenderTarget: THREE.WebGLRenderTarget;
+  rgbGrassRenderTarget: THREE.WebGLRenderTarget;
+  normalRenderTarget: THREE.WebGLRenderTarget;
+  groundRenderTarget: THREE.WebGLRenderTarget;
+  normalMaterial: THREE.Material;
+
+  constructor(
+    resolution: THREE.Vector2,
+    scene: THREE.Scene,
+    camera: THREE.Camera
+  ) {
+    super();
+    this.resolution = resolution;
+    this.scene = scene;
+    this.camera = camera;
+    this.fsQuad = new FullScreenQuad(this.material());
+
+    this.topdownCamera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    // this.topdownCamera = new THREE.OrthographicCamera(
+    //   -window.innerWidth / 2,
+    //   window.innerWidth / 2,
+    //   window.innerHeight / 2,
+    //   -window.innerHeight / 2,
+    //   0.1,
+    //   1000
+    // );
+    this.topdownCamera.position.set(0, 5, 0);
+    this.topdownCamera.lookAt(new THREE.Vector3(0, 0, 0));
+    this.topdownCamera.layers.enable(1);
+    // (this.topdownCamera as THREE.OrthographicCamera).updateProjectionMatrix();
+    // (this.topdownCamera as THREE.PerspectiveCamera).aspect =
+    // window.innerWidth / window.innerHeight;
+    (this.topdownCamera as THREE.PerspectiveCamera).updateProjectionMatrix();
+    (this.topdownCamera as THREE.PerspectiveCamera).updateMatrixWorld();
+    // (this.topdownCamera as THREE.PerspectiveCamera).updateMatrix();
+
+    this.rgbRenderTarget = this.createRenderTarget(
+      resolution.x,
+      resolution.y,
+      false
+    );
+    this.rgbGrassRenderTarget = this.createRenderTarget(
+      resolution.x,
+      resolution.y,
+      true
+    );
+    this.normalRenderTarget = this.createRenderTarget(
+      resolution.x,
+      resolution.y,
+      true
+    );
+    this.groundRenderTarget = this.createRenderTarget(
+      resolution.x,
+      resolution.y,
+      false
+    );
+
+    this.normalMaterial = new THREE.MeshNormalMaterial();
+  }
+
+  render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget) {
+    this.camera.layers.disable(3);
+    renderer.setRenderTarget(this.rgbRenderTarget);
+    renderer.render(this.scene, this.camera);
+    this.camera.layers.enable(3);
+
+    renderer.setRenderTarget(this.rgbGrassRenderTarget);
+    renderer.render(this.scene, this.camera);
+
+    // Remove all objects from scene
+    const invisibleLayer = new THREE.Layers();
+    invisibleLayer.set(0);
+    this.scene.children.forEach((child) => {
+      if (child instanceof THREE.Mesh && child.layers.test(invisibleLayer)) {
+        child.material.colorWrite = false;
+        child.material.depthWrite = false;
+      }
+    });
+    renderer.setRenderTarget(this.groundRenderTarget);
+    renderer.render(this.scene, this.topdownCamera);
+    this.scene.children.forEach((child) => {
+      if (child instanceof THREE.Mesh && child.layers.test(invisibleLayer)) {
+        child.material.colorWrite = true;
+        child.material.depthWrite = true;
+      }
+
+      if (child instanceof THREE.InstancedMesh) {
+        child.material.uniforms["tGround"] = {
+          value: this.groundRenderTarget.texture,
+        };
+      }
+    });
+
+    this.camera.layers.disable(2);
+    const prevOverrideMaterial = this.scene.overrideMaterial;
+    renderer.setRenderTarget(this.normalRenderTarget);
+    this.scene.overrideMaterial = this.normalMaterial;
+    renderer.render(this.scene, this.camera);
+    this.scene.overrideMaterial = prevOverrideMaterial;
+    this.camera.layers.enable(2);
+
+    const uniforms = (this.fsQuad.material as THREE.ShaderMaterial).uniforms;
+    uniforms.tDiffuse.value = this.rgbRenderTarget.texture;
+    uniforms.tDepth.value = this.normalRenderTarget.depthTexture;
+    uniforms.tNormal.value = this.normalRenderTarget.texture;
+    uniforms.tGrassDiffuse.value = this.rgbGrassRenderTarget.texture;
+    uniforms.tGrassDepth.value = this.rgbGrassRenderTarget.depthTexture;
+
+    if (this.renderToScreen) {
+      renderer.setRenderTarget(null);
+    } else {
+      renderer.setRenderTarget(writeBuffer);
+      writeBuffer.depthTexture = this.normalRenderTarget.depthTexture;
+      writeBuffer.depthBuffer = true;
+      if (this.clear) {
+        renderer.clear();
+      }
+    }
+
+    this.fsQuad.render(renderer);
+  }
+
+  material() {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        tDiffuse: { value: null },
+        tDepth: { value: null },
+        tNormal: { value: null },
+        tGrassDiffuse: { value: null },
+        tGrassDepth: { value: null },
+        uDirectionalLight: {
+          value: new THREE.Vector3(5, 4, 3),
+        },
+        uInverseProjectionMatrix: {
+          value: this.camera.projectionMatrixInverse,
+        },
+        uInverseViewMatrix: {
+          value: this.camera.matrixWorld,
+        },
+        uResolution: {
+          value: new THREE.Vector4(
+            this.resolution.x,
+            this.resolution.y,
+            1 / this.resolution.x,
+            1 / this.resolution.y
+          ),
+        },
+      },
+      vertexShader: outlineVert,
+      fragmentShader: outlineFrag,
+    });
+  }
+
+  createRenderTarget(width: number, height: number, depthTexture: boolean) {
+    const renderTarget = new THREE.WebGLRenderTarget(
+      width,
+      height,
+      depthTexture
+        ? {
+            depthTexture: new THREE.DepthTexture(width, height),
+            depthBuffer: true,
+          }
+        : undefined
+    );
+    renderTarget.texture.format = THREE.RGBAFormat;
+    renderTarget.texture.minFilter = THREE.NearestFilter;
+    renderTarget.texture.magFilter = THREE.NearestFilter;
+    renderTarget.texture.generateMipmaps = false;
+    renderTarget.stencilBuffer = false;
+    return renderTarget;
+  }
+}

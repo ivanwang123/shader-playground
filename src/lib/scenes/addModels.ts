@@ -4,7 +4,8 @@ import { GLTFLoader } from "three/examples/jsm/Addons.js";
 
 export function addGround(scene: THREE.Scene) {
   const groundGeometry = new THREE.PlaneGeometry(10, 10);
-  const groundMaterial = new THREE.MeshStandardMaterial({ color: 0xceb1be });
+  // const groundMaterial = new THREE.MeshStandardMaterial({ color: 0xceb1be });
+  const groundMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
   // const groundMaterial = createToonMaterial(new THREE.Color(0x999999));
   const ground = new THREE.Mesh<any, any, any>(groundGeometry, groundMaterial);
   ground.receiveShadow = true;
@@ -22,6 +23,10 @@ export async function addMonkey(scene: THREE.Scene) {
   monkeyTexture.flipY = false;
   monkeyTexture.colorSpace = THREE.SRGBColorSpace;
   const monkeyMaterial = createToonMaterial(monkeyTexture);
+  const whiteMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff, // Pure white color
+    side: THREE.DoubleSide, // Important for some models
+  });
 
   let monkey = await new GLTFLoader().loadAsync("/models/Monkey.glb");
   monkey.scene.position.set(1, 1, 0);
@@ -32,7 +37,7 @@ export async function addMonkey(scene: THREE.Scene) {
       //   color: child.material.color,
       // });
       // texture = texture.convertLinearToSRGB();
-      child.material = monkeyMaterial;
+      child.material = whiteMaterial;
       // child.material = createToonMaterial(child.material.color);
 
       child.castShadow = true;
