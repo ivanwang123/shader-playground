@@ -29,6 +29,7 @@
   import { Reflector } from "./models/reflector/reflector";
   import { DisplayPass } from "./postprocess/display/DisplayPass";
   import { GodrayPass0 } from "./postprocess/godray/GodrayPass0";
+  import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
   let canvas: HTMLCanvasElement;
 
@@ -59,6 +60,13 @@
 
   const sphere = addSphere({ position: new THREE.Vector3(2.5, 0.5, 1) });
   scene.add(sphere);
+
+  const loader = new GLTFLoader();
+  loader.load("/models/WompCharacter/WompCharacter.gltf", (gltf) => {
+    const model = gltf.scene
+    model.scale.set(0.01, 0.01, 0.01)
+    scene.add(model)
+  })
 
   const water = addWater(camera);
   scene.add(water);
